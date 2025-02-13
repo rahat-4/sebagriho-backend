@@ -40,7 +40,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = ["autoslug", "phonenumber_field"]
 
-PROJECT_APPS = ["apps.authentication", "apps.doctor", "common"]
+PROJECT_APPS = ["apps.authentication", "apps.doctors", "common"]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 

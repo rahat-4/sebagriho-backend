@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class DoctorConfig(AppConfig):
+class PatientsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.doctor'
+    name = 'patients'

@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import slugify
 
@@ -8,6 +9,7 @@ from .choices import OrganizationType, OrganizationStatus
 class Organization(BaseModelWithUid):
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     name = models.CharField(max_length=255)
+    subdomain = models.SlugField(max_length=255, unique=True, blank=True, null=True, help_text="Required for non-chamber organizations")
     parent = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -32,6 +34,14 @@ class Organization(BaseModelWithUid):
     instagram = models.URLField(blank=True, null=True)
     youtube = models.URLField(blank=True, null=True)
 
+    def clean(self):
+        super().clean()
+
+        # Validate that non-chamber organizations have a subdomain
+        if self.organization_type != OrganizationType.CHAMBER and not self.subdomain:
+            raise ValidationError({"subdomain": "Subdomain is required for non-chamber organizations."})
+        
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.name)
@@ -41,10 +51,19 @@ class Organization(BaseModelWithUid):
                 count += 1
                 slug = f"{base_slug}-{count}"
             self.slug = slug
+
+        if self.organization_type == OrganizationType.CHAMBER:
+            self.subdomain = None
+        
+        self.full_clean()
+
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.name} (UID: {self.uid})"
+        if self.organization_type == OrganizationType.CHAMBER:
+            return f"{self.name} (UID: {self.uid})"
+        
+        return f"{self.name} - {self.subdomain} (UID: {self.uid})"
 
 
 class OrganizationMember(BaseModelWithUid):
