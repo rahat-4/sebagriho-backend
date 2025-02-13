@@ -14,18 +14,3 @@ class OrganizationType(models.TextChoices):
 class OrganizationStatus(models.TextChoices):
     OPEN = "OPEN", "Open"
     CLOSED = "CLOSED", "CLOSED"
-
-class OrganizationUserRole(models.TextChoices):
-    OWNER = "OWNER", "Owner"
-    ADMIN = "ADMIN", "Admin"
-    MANAGER = "MANAGER", "Manager"
-    STAFF = "STAFF", "Staff"
-    DOCTOR = "DOCTOR", "Doctor"
-    NURSE = "NURSE", "Nurse"
-    PHARMACIST = "PHARMACIST", "Pharmacist"
-    LAB_TECHNICIAN = "LAB_TECHNICIAN", "Lab Technician"
-    RECEPTIONIST = "RECEPTIONIST", "Receptionist"
-    AMBULANCE_DRIVER = "AMBULANCE_DRIVER", "Ambulance Driver"
-    PATIENT = "PATIENT", "Patient"
-    VISITOR = "VISITOR", "Visitor"
-    OTHER = "OTHER", "Other"

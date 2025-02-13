@@ -1,10 +1,8 @@
 from django.db import models
 from django.utils.text import slugify
 
-from apps.authentication.models import User
-from apps.organizations.models import Organization
-
 from common.models import BaseModelWithUid
+
 from .choices import (
     AffiliationStatus,
     DepartmentType,
@@ -103,7 +101,7 @@ class Affiliation(BaseModelWithUid):
 
 
 class Doctor(BaseModelWithUid):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile")
+    user = models.OneToOneField("authentication.User", on_delete=models.CASCADE, related_name="doctor_profile")
     registration_number = models.CharField(max_length=255, unique=True)
     experience = models.PositiveIntegerField()
     about = models.TextField(blank=True)
@@ -132,7 +130,7 @@ class Doctor(BaseModelWithUid):
 
 class Schedule(BaseModelWithUid):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    chamber = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    chamber = models.ForeignKey("organizations.Organization", on_delete=models.CASCADE)
     day = models.CharField(max_length=20, choices=DayStatus.choices)
     shift = models.CharField(max_length=20, choices=ShiftStatus.choices)
     start_time = models.TimeField()

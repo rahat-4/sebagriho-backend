@@ -3,7 +3,7 @@ from django.utils.text import slugify
 
 from common.models import BaseModelWithUid
 
-from .choices import OrganizationType, OrganizationStatus, OrganizationUserRole
+from .choices import OrganizationType, OrganizationStatus
 
 class Organization(BaseModelWithUid):
     slug = models.SlugField(max_length=255, unique=True, blank=True)
@@ -47,13 +47,14 @@ class Organization(BaseModelWithUid):
         return f"{self.name} (UID: {self.uid})"
 
 
-class OrganizationUser(BaseModelWithUid):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    user = models.ForeignKey("authentication.User", on_delete=models.CASCADE)
-    role = models.CharField(
-        max_length=20, choices=OrganizationUserRole.choices, default=OrganizationUserRole.STAFF
-    )
+class OrganizationMember(BaseModelWithUid):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="members")
+    user = models.ForeignKey("authentication.User", on_delete=models.CASCADE, related_name="organization_members")
+    role = models.ForeignKey("authentication.Role", on_delete=models.CASCADE, related_name="organization_roles")
     is_owner = models.BooleanField(default=False)
 
+    class Meta:
+        unique_together = ["user", "organization"]
+
     def __str__(self):
-        return f"{self.user} - {self.organization} (UID: {self.uid})"
+        return f"{self.user.phone} - {self.organization.name} ({self.role.name})"
