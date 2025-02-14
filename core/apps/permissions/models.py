@@ -33,3 +33,26 @@ class Permission(BaseModelWithUid):
 
     def __str__(self):
         return f"{self.role.name} = {self.methods}"
+
+
+class OrganizationMember(BaseModelWithUid):
+    organization = models.ForeignKey(
+        "organizations.organization", on_delete=models.CASCADE, related_name="members"
+    )
+    user = models.ForeignKey(
+        "authentication.user",
+        on_delete=models.CASCADE,
+        related_name="organization_members",
+    )
+    role = models.ForeignKey(
+        "permissions.role",
+        on_delete=models.CASCADE,
+        related_name="organization_roles",
+    )
+    is_owner = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ["user", "organization"]
+
+    def __str__(self):
+        return f"{self.user.phone} - {self.organization.name} ({self.role.name})"

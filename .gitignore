@@ -169,3 +169,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Hide migration files
+**/migrations/*
+!**/migrations/__init__.py
