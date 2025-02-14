@@ -1,15 +1,18 @@
 from django.db import models
 
-from authentication.choices import BloodGroups
+from autoslug import AutoSlugField
+
+from apps.authentication.choices import BloodGroups
 
 from common.models import BaseModelWithUid
 from common.utils import unique_number_generator
 
 from .choices import PatientStatus
+from .utils import get_patient_slug
 
 class Patient(BaseModelWithUid):
     serial_number = models.PositiveIntegerField(unique=True, editable=False)
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    slug = AutoSlugField(unique=True, populate_from=get_patient_slug)
     status = models.CharField(max_length=20, choices=PatientStatus.choices, default=PatientStatus.ACTIVE)
     user = models.ForeignKey("authentication.User", on_delete=models.CASCADE, related_name="patients")
 

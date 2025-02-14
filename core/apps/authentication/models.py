@@ -11,21 +11,18 @@ from autoslug import AutoSlugField
 
 from phonenumber_field.modelfields import PhoneNumberField
 
-from .choices import BloodGroups, UserGender, UserStatus, MethodType
+from .choices import BloodGroups, UserGender, UserStatus
 from .managers import UserManager
 from .utils import get_user_media_path_prefix, get_user_slug
 
 from common.models import BaseModelWithUid
 
+
 class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
     slug = AutoSlugField(populate_from=get_user_slug, unique=True)
     phone = PhoneNumberField(unique=True)
     email = models.EmailField(
-        verbose_name="Email Address",
-        max_length=255,
-        unique=True,
-        blank=True,
-        null=True
+        verbose_name="Email Address", max_length=255, unique=True, blank=True, null=True
     )
     secondary_phone = PhoneNumberField(blank=True, null=True)
     secondary_email = models.EmailField(blank=True, null=True)
@@ -51,10 +48,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
         default=UserGender.MALE,
     )
     blood_group = models.CharField(
-        max_length=5,
-        choices=BloodGroups.choices,
-        blank=True,
-        null=True
+        max_length=5, choices=BloodGroups.choices, blank=True, null=True
     )
     date_of_birth = models.DateField(blank=True, null=True)
     height = models.FloatField(blank=True, null=True)
@@ -103,32 +97,3 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
         Return the most descriptive name available (first_name, email, or phone).
         """
         return self.get_full_name() or self.email or self.phone
-    
-
-
-class Role(BaseModelWithUid):
-    name = models.CharField(max_length=100)
-    organization = models.ForeignKey(
-        "organizations.Organization", on_delete=models.CASCADE, related_name="roles")
-    
-    class Meta:
-        unique_together = ["name", "organization"]
-    
-    def __str__(self):
-        return f"{self.organization.name} = {self.name}"
-
-class Permission(BaseModelWithUid):
-    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="permissions")
-    methods = models.JSONField(default=list) # Store multiple methods as a list
-
-    class Meta:
-        unique_together = ["role", "methods"]
-
-    def clean(self):
-        # Validate that all methods are valid choices
-        for method in self.methods:
-            if method not in MethodType.values:
-                raise ValueError(f"Invalid method: {method}")
-    
-    def __str__(self):
-        return f"{self.role.name} = {self.methods}"

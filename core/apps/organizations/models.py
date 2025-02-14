@@ -1,15 +1,24 @@
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.text import slugify
+
+from autoslug import AutoSlugField
 
 from common.models import BaseModelWithUid
 
 from .choices import OrganizationType, OrganizationStatus
+from .utils import get_organization_slug
+
 
 class Organization(BaseModelWithUid):
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    slug = AutoSlugField(unique=True, populate_from=get_organization_slug)
     name = models.CharField(max_length=255)
-    subdomain = models.SlugField(max_length=255, unique=True, blank=True, null=True, help_text="Required for non-chamber organizations")
+    subdomain = models.SlugField(
+        max_length=255,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text="Required for non-chamber organizations",
+    )
     parent = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -18,10 +27,14 @@ class Organization(BaseModelWithUid):
         related_name="sub_organizations",
     )
     organization_type = models.CharField(
-        max_length=20, choices=OrganizationType.choices, default=OrganizationType.CHAMBER
+        max_length=20,
+        choices=OrganizationType.choices,
+        default=OrganizationType.CHAMBER,
     )
     status = models.CharField(
-        max_length=20, choices=OrganizationStatus.choices, default=OrganizationStatus.OPEN
+        max_length=20,
+        choices=OrganizationStatus.choices,
+        default=OrganizationStatus.OPEN,
     )
     description = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -39,37 +52,33 @@ class Organization(BaseModelWithUid):
 
         # Validate that non-chamber organizations have a subdomain
         if self.organization_type != OrganizationType.CHAMBER and not self.subdomain:
-            raise ValidationError({"subdomain": "Subdomain is required for non-chamber organizations."})
-        
+            raise ValidationError(
+                {"subdomain": "Subdomain is required for non-chamber organizations."}
+            )
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            base_slug = slugify(self.name)
-            slug = base_slug
-            count = 1
-            while Organization.objects.filter(slug=slug).exists():
-                count += 1
-                slug = f"{base_slug}-{count}"
-            self.slug = slug
-
-        if self.organization_type == OrganizationType.CHAMBER:
-            self.subdomain = None
-        
         self.full_clean()
 
         super().save(*args, **kwargs)
 
     def __str__(self):
-        if self.organization_type == OrganizationType.CHAMBER:
-            return f"{self.name} (UID: {self.uid})"
-        
-        return f"{self.name} - {self.subdomain} (UID: {self.uid})"
+        return f"{self.name} (UID: {self.uid})"
 
 
 class OrganizationMember(BaseModelWithUid):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="members")
-    user = models.ForeignKey("authentication.User", on_delete=models.CASCADE, related_name="organization_members")
-    role = models.ForeignKey("authentication.Role", on_delete=models.CASCADE, related_name="organization_roles")
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="members"
+    )
+    user = models.ForeignKey(
+        "authentication.user",
+        on_delete=models.CASCADE,
+        related_name="organization_members",
+    )
+    role = models.ForeignKey(
+        "permissions.role",
+        on_delete=models.CASCADE,
+        related_name="organization_roles",
+    )
     is_owner = models.BooleanField(default=False)
 
     class Meta:

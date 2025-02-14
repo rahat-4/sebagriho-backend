@@ -23,10 +23,3 @@ class BloodGroups(models.TextChoices):
     AB_NEGATIVE = "AB-"
     O_POSITIVE = "O+"
     O_NEGATIVE = "O-"
-
-class MethodType(models.TextChoices):
-    GET = "GET", "Read"
-    POST = "POST", "Create"
-    DETAIL = "DETAIL", "View Detail"
-    PUT = "PUT", "Update"
-    DELETE = "DELETE", "Delete"

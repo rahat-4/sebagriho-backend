@@ -1,5 +1,6 @@
 from django.db import models
-from django.utils.text import slugify
+
+from autoslug import AutoSlugField
 
 from common.models import BaseModelWithUid
 
@@ -21,7 +22,7 @@ class LanguageSpoken(BaseModelWithUid):
 
 
 class Department(BaseModelWithUid):
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    slug = AutoSlugField(unique=True, populate_from="name")
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
     parent = models.ForeignKey(
@@ -34,17 +35,6 @@ class Department(BaseModelWithUid):
     department_type = models.CharField(
         max_length=20, choices=DepartmentType.choices, default=DepartmentType.MEDICAL
     )
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            base_slug = slugify(self.name)
-            slug = base_slug
-            count = 1
-            while Department.objects.filter(slug=slug).exists():
-                count += 1
-                slug = f"{base_slug}-{count}"
-            self.slug = slug
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} (UID: {self.uid})"
