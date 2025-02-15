@@ -6,11 +6,11 @@ WORKDIR /app
 # RUN apk add --no-cache gcc musl-dev python3-dev libffi-dev \
 #     postgresql-dev mariadb-dev build-base
 
-COPY ../requirements.txt /app
+COPY requirements.txt /app
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ../ /app
+COPY . /app
 
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
