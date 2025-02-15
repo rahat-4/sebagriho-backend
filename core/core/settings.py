@@ -38,7 +38,7 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
 ]
 
-THIRD_PARTY_APPS = ["autoslug", "phonenumber_field"]
+THIRD_PARTY_APPS = ["autoslug", "phonenumber_field", "rest_framework"]
 
 PROJECT_APPS = [
     "common",
