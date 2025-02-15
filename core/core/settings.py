@@ -65,6 +65,8 @@ MIDDLEWARE = [
 
 AUTH_USER_MODEL = "authentication.User"
 
+APPEND_SLASH = False
+
 ROOT_URLCONF = "core.urls"
 
 TEMPLATES = [

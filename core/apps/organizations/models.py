@@ -3,6 +3,8 @@ from django.db import models
 
 from autoslug import AutoSlugField
 
+from phonenumber_field.modelfields import PhoneNumberField
+
 from common.models import BaseModelWithUid
 
 from .choices import OrganizationType, OrganizationStatus
@@ -17,7 +19,7 @@ class Organization(BaseModelWithUid):
         unique=True,
         blank=True,
         null=True,
-        help_text="Required for non-chamber organizations",
+        help_text="Required for non-chamber and non-pharmacy organizations",
     )
     parent = models.ForeignKey(
         "self",
@@ -34,11 +36,11 @@ class Organization(BaseModelWithUid):
     status = models.CharField(
         max_length=20,
         choices=OrganizationStatus.choices,
-        default=OrganizationStatus.OPEN,
+        default=OrganizationStatus.ACTIVE,
     )
     description = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
-    contact = models.CharField(max_length=20, blank=True, null=True)
+    phone = PhoneNumberField(unique=True, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     facebook = models.URLField(blank=True, null=True)
@@ -51,9 +53,15 @@ class Organization(BaseModelWithUid):
         super().clean()
 
         # Validate that non-chamber organizations have a subdomain
-        if self.organization_type != OrganizationType.CHAMBER and not self.subdomain:
+        if (
+            self.organization_type
+            not in (OrganizationType.CHAMBER, OrganizationType.PHARMACY)
+            and not self.subdomain
+        ):
             raise ValidationError(
-                {"subdomain": "Subdomain is required for non-chamber organizations."}
+                {
+                    "subdomain": "Subdomain is not required for chamber or pharmacy organizations."
+                }
             )
 
     def save(self, *args, **kwargs):

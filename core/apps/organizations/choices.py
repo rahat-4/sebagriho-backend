@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class OrganizationType(models.TextChoices):
     CHAMBER = "CHAMBER", "Chamber"
     HOSPITAL = "HOSPITAL", "Hospital"
@@ -12,5 +13,5 @@ class OrganizationType(models.TextChoices):
 
 
 class OrganizationStatus(models.TextChoices):
-    OPEN = "OPEN", "Open"
-    CLOSED = "CLOSED", "CLOSED"
+    ACTIVE = "ACTIVE", "Active"
+    PENDING = "PENDING", "Pending"
