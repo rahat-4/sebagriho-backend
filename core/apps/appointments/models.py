@@ -1,12 +1,19 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
 from autoslug import AutoSlugField
 
 from common.models import BaseModelWithUid
 from common.utils import unique_number_generator
 
+from apps.organizations.models import Organization
+from apps.doctors.models import Doctor
+from apps.patients.models import Patient, RelativePatient
+
 from .choices import AppointmentType, AppointmentFor, AppointmentStatus
 from .utils import get_appointment_slug
+
+User = get_user_model()
 
 
 class Appointment(BaseModelWithUid):
@@ -38,13 +45,30 @@ class Appointment(BaseModelWithUid):
     cancellation_reason = models.TextField(blank=True, null=True)
     conference_link = models.URLField(blank=True, null=True)
     creator_user = models.ForeignKey(
-        "authentication.user",
+        User,
         on_delete=models.CASCADE,
         help_text="User who created the appointment.",
         related_name="created_appointments",
     )
+    patient = models.ForeignKey(
+        Patient,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="patient_appointments",
+    )
+    relative_patient = models.ForeignKey(
+        RelativePatient,
+        on_delete=models.CASCADE,
+        related_name="relative_patient_appointments",
+        blank=True,
+        null=True,
+    )
+    doctor = models.ForeignKey(
+        Doctor, on_delete=models.CASCADE, related_name="doctor_appointments"
+    )
     organization = models.ForeignKey(
-        "organizations.organization",
+        Organization,
         on_delete=models.CASCADE,
         related_name="appointments",
     )

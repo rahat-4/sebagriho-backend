@@ -44,7 +44,6 @@ PROJECT_APPS = [
     "common",
     "apps.authentication",
     "apps.organizations",
-    "apps.permissions",
     "apps.doctors",
     "apps.patients",
     "apps.prescriptions",

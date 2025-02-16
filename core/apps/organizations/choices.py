@@ -15,3 +15,11 @@ class OrganizationType(models.TextChoices):
 class OrganizationStatus(models.TextChoices):
     ACTIVE = "ACTIVE", "Active"
     PENDING = "PENDING", "Pending"
+
+
+class MethodType(models.TextChoices):
+    GET = "GET", "Read"
+    POST = "POST", "Create"
+    DETAIL = "DETAIL", "View Detail"
+    PUT = "PUT", "Update"
+    DELETE = "DELETE", "Delete"

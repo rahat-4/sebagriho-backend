@@ -1,8 +1,12 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
 from autoslug import AutoSlugField
 
 from common.models import BaseModelWithUid
+
+
+from apps.organizations.models import Organization
 
 from .choices import (
     AffiliationStatus,
@@ -12,6 +16,8 @@ from .choices import (
     ShiftStatus,
     DayStatus,
 )
+
+User = get_user_model()
 
 
 class LanguageSpoken(BaseModelWithUid):
@@ -46,14 +52,13 @@ class Specialty(BaseModelWithUid):
 
     def __str__(self):
         return f"{self.name} (UID: {self.uid})"
-    
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=["name", "department"], name="unique_specialty_per_department"
             )
         ]
-
 
 
 class Achievement(BaseModelWithUid):
@@ -91,7 +96,9 @@ class Affiliation(BaseModelWithUid):
 
 
 class Doctor(BaseModelWithUid):
-    user = models.OneToOneField("authentication.User", on_delete=models.CASCADE, related_name="doctor_profile")
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="doctor_profile"
+    )
     registration_number = models.CharField(max_length=255, unique=True)
     experience = models.PositiveIntegerField()
     about = models.TextField(blank=True)
@@ -107,12 +114,22 @@ class Doctor(BaseModelWithUid):
     )
 
     # many to many fields
-    departments = models.ManyToManyField(Department, related_name="doctor_departments", blank=True)
-    affiliations = models.ManyToManyField(Affiliation, related_name="doctor_affiliations", blank=True)
-    specialties = models.ManyToManyField(Specialty, related_name="doctor_specialties", blank=True)
-    achievements = models.ManyToManyField(Achievement, related_name="doctor_achievements", blank=True)
+    departments = models.ManyToManyField(
+        Department, related_name="doctor_departments", blank=True
+    )
+    affiliations = models.ManyToManyField(
+        Affiliation, related_name="doctor_affiliations", blank=True
+    )
+    specialties = models.ManyToManyField(
+        Specialty, related_name="doctor_specialties", blank=True
+    )
+    achievements = models.ManyToManyField(
+        Achievement, related_name="doctor_achievements", blank=True
+    )
     degrees = models.ManyToManyField(Degree, related_name="doctor_degrees", blank=True)
-    languages_spoken = models.ManyToManyField(LanguageSpoken, related_name="doctor_languages_spoken", blank=True)
+    languages_spoken = models.ManyToManyField(
+        LanguageSpoken, related_name="doctor_languages_spoken", blank=True
+    )
 
     def __str__(self):
         return f"Dr. {self.user.get_full_name()} (UID: {self.uid})"
@@ -120,7 +137,7 @@ class Doctor(BaseModelWithUid):
 
 class Schedule(BaseModelWithUid):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    chamber = models.ForeignKey("organizations.Organization", on_delete=models.CASCADE)
+    chamber = models.ForeignKey(Organization, on_delete=models.CASCADE)
     day = models.CharField(max_length=20, choices=DayStatus.choices)
     shift = models.CharField(max_length=20, choices=ShiftStatus.choices)
     start_time = models.TimeField()
@@ -134,5 +151,7 @@ class Schedule(BaseModelWithUid):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["day", "shift"], name="unique_schedule_per_day_shift")
+            models.UniqueConstraint(
+                fields=["day", "shift"], name="unique_schedule_per_day_shift"
+            )
         ]

@@ -18,10 +18,12 @@ urlpatterns = [
         OrganizationDoctorsList.as_view(),
         name="organization.doctors-list",
     ),
+    # Get organization's detail, update and soft delete
     path(
         "/<uuid:organization_uid>",
         OrganizationDetail.as_view(),
         name="organization-detail",
     ),
+    # Organization add and get list
     path("", OrganizationList.as_view(), name="organization-list"),
 ]
