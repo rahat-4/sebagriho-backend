@@ -63,8 +63,9 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    is_admin = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
     is_patient = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
 
     objects = UserManager()
 
@@ -72,7 +73,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.email or str(self.phone) or "Anonymous User"
+        return self.get_display_name()
 
     def clean(self):
         super().clean()
@@ -90,10 +91,10 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
 
     def get_short_name(self):
         """Return the short name for the user."""
-        return self.first_name or self.email or self.phone
+        return self.first_name or self.get_display_name()
 
     def get_display_name(self):
         """
-        Return the most descriptive name available (first_name, email, or phone).
+        Return the most descriptive name available.
         """
-        return self.get_full_name() or self.email or self.phone
+        return self.get_full_name() if self.get_full_name() else self.phone

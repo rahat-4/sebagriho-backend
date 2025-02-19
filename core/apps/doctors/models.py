@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -112,6 +113,8 @@ class Doctor(BaseModelWithUid):
         db_index=True,
         default=DoctorStatus.ACTIVE,
     )
+    max_patients = models.PositiveIntegerField(default=10)
+    is_available = models.BooleanField(default=True)
 
     # many to many fields
     departments = models.ManyToManyField(
@@ -146,12 +149,17 @@ class Schedule(BaseModelWithUid):
         max_length=20, choices=ScheduleStatus.choices, default=ScheduleStatus.ACTIVE
     )
 
-    def __str__(self):
-        return f"Dr. {self.doctor.user.get_full_name()} - {self.get_day_display()} {self.get_shift_display()}"
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["day", "shift"], name="unique_schedule_per_day_shift"
+                fields=["doctor", "chamber", "day", "shift"],
+                name="unique_schedule_per_doctor_chamber_day_shift",
             )
         ]
+
+    def clean(self):
+        if self.start_time >= self.end_time:
+            raise ValidationError("Start time must be before end time.")
+
+    def __str__(self):
+        return f"Dr. {self.doctor.user.get_full_name()} - {self.get_day_display()} {self.get_shift_display()}"

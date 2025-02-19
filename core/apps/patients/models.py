@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.dispatch import receiver
+from django.db.models.signals import pre_save
 
 from autoslug import AutoSlugField
 
@@ -25,10 +27,6 @@ class Patient(BaseModelWithUid):
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.serial_number}"
 
-    def save(self, *args, **kwargs):
-        self.serial_number = unique_number_generator(self)
-        super().save(*args, **kwargs)
-
 
 class RelativePatient(BaseModelWithUid):
     patient = models.ForeignKey(
@@ -47,3 +45,10 @@ class RelativePatient(BaseModelWithUid):
 
     def __str__(self):
         return f"{self.patient.user.get_full_name()} - {self.name}"
+
+
+# Ensure serial number is generated before saving the patient
+@receiver(pre_save, sender=Patient)
+def set_patient_serial_number(sender, instance, **kwargs):
+    if not instance.serial_number:
+        instance.serial_number = unique_number_generator(instance)

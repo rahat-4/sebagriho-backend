@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 from autoslug import AutoSlugField
 
@@ -35,15 +38,21 @@ class Appointment(BaseModelWithUid):
         max_length=50, choices=AppointmentFor.choices, default=AppointmentFor.ME
     )
     status = models.CharField(
-        max_length=50, choices=AppointmentStatus.choices, blank=True
+        max_length=50,
+        choices=AppointmentStatus.choices,
+        default=AppointmentStatus.PENDING,
     )
     complication = models.CharField(max_length=500, blank=True, null=True)
-    is_visible = models.BooleanField(default=False, help_text="Use for visibility.")
+    is_visible = models.BooleanField(
+        default=False, help_text="Should this appointment be visible to the doctor?"
+    )
     is_previous = models.BooleanField(
-        default=True, help_text="Show previous medical records."
+        default=True, help_text="Should previous medical records be shown?"
     )
     cancellation_reason = models.TextField(blank=True, null=True)
     conference_link = models.URLField(blank=True, null=True)
+
+    # Foreign Keys
     creator_user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -82,6 +91,26 @@ class Appointment(BaseModelWithUid):
     def __str__(self):
         return f"{self.organization.name} - {self.serial_number}"
 
-    def save(self, *args, **kwargs):
-        self.serial_number = unique_number_generator(self)
-        super().save(*args, **kwargs)
+    def clean(self):
+        """Ensure that either `patient` or `relative_patient` is set, but not both."""
+        if not self.patient and not self.relative_patient:
+            raise ValidationError("Either `patient` or `relative_patient` must be set.")
+        if self.patient and self.relative_patient:
+            raise ValidationError(
+                "An appointment cannot have both `patient` and `relative_patient`."
+            )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["doctor", "schedule_start"],
+                name="unique_appointment_per_doctor_time",
+            )
+        ]
+
+
+# Ensure serial_number is assigned before saving
+@receiver(pre_save, sender=Appointment)
+def set_appointment_serial_number(sender, instance, **kwargs):
+    if not instance.serial_number:
+        instance.serial_number = unique_number_generator(instance)

@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -8,7 +9,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from common.models import BaseModelWithUid
 
-from .choices import OrganizationType, OrganizationStatus, MethodType
+from .choices import OrganizationType, OrganizationStatus
 from .utils import get_organization_slug
 
 User = get_user_model()
@@ -32,12 +33,12 @@ class Organization(BaseModelWithUid):
         related_name="sub_organizations",
     )
     organization_type = models.CharField(
-        max_length=20,
+        max_length=25,
         choices=OrganizationType.choices,
         default=OrganizationType.CHAMBER,
     )
     status = models.CharField(
-        max_length=20,
+        max_length=25,
         choices=OrganizationStatus.choices,
         default=OrganizationStatus.ACTIVE,
     )
@@ -52,10 +53,18 @@ class Organization(BaseModelWithUid):
     instagram = models.URLField(blank=True, null=True)
     youtube = models.URLField(blank=True, null=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["phone"],
+                name="unique_non_null_phone",
+                condition=~models.Q(phone=None),
+            )
+        ]
+
     def clean(self):
         super().clean()
-
-        # Validate that non-chamber organizations have a subdomain
+        # Ensure that subdomain is required for non-chamber and non-pharmacy organizations
         if (
             self.organization_type
             not in (OrganizationType.CHAMBER, OrganizationType.PHARMACY)
@@ -63,71 +72,51 @@ class Organization(BaseModelWithUid):
         ):
             raise ValidationError(
                 {
-                    "subdomain": "Subdomain is not required for chamber or pharmacy organizations."
+                    "subdomain": "Subdomain is required for non-chamber and non-pharmacy organizations."
                 }
             )
 
     def save(self, *args, **kwargs):
-        self.full_clean()
-
+        self.full_clean()  # Ensure validation before saving
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.name} (UID: {self.uid})"
+        return f"{self.name} (Slug: {self.slug}) (UID: {self.uid})"
 
 
-class OrganizationRole(BaseModelWithUid):
+class OrganizationMember(BaseModelWithUid):
     name = models.CharField(max_length=100)
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="roles"
     )
+    is_owner = models.BooleanField(default=False)
+    permissions = models.ManyToManyField(Permission, blank=True)
 
     class Meta:
-        unique_together = ["name", "organization"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "organization"], name="unique_member_per_organization"
+            )
+        ]
 
     def __str__(self):
-        return f"{self.organization.name} = {self.name}"
+        return f"{self.organization.name}: {self.name}"
 
 
-class OrganizationMember(BaseModelWithUid):
-    organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="members"
-    )
+class OrganizationPermission(BaseModelWithUid):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="organization_members",
+        related_name="organization_permissions",
     )
-    organization_role = models.ForeignKey(
-        OrganizationRole,
+    organization_member = models.ForeignKey(
+        OrganizationMember,
         on_delete=models.CASCADE,
-        related_name="organization_roles",
+        related_name="member_permissions",
     )
-    is_owner = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ["user", "organization"]
+        unique_together = ["user", "organization_member"]
 
     def __str__(self):
-        return f"{self.user.phone} - {self.organization.name} ({self.role.name})"
-
-
-class Permission(BaseModelWithUid):
-    organization_role = models.ForeignKey(
-        OrganizationRole,
-        on_delete=models.CASCADE,
-        related_name="permissions",
-    )
-    methods = models.JSONField(default=list)  # Store multiple methods as a list
-
-    class Meta:
-        unique_together = ["organization_role", "methods"]
-
-    def clean(self):
-        # Validate that all methods are valid choices
-        for method in self.methods:
-            if method not in MethodType.values:
-                raise ValueError(f"Invalid method: {method}")
-
-    def __str__(self):
-        return f"{self.role.name} = {self.methods}"
+        return f"{self.user.phone} → {self.organization_member.name} ({self.organization_member.organization.name})"
