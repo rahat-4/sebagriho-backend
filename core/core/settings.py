@@ -75,7 +75,17 @@ MIDDLEWARE = [
 AUTH_USER_MODEL = "authentication.User"
 
 # Block user after 5 failed login attempts
-AXES_FAILURE_LIMIT = 5
+AXES_FAILURE_LIMIT = 5  # Lockout after 5 failed attempts
+AXES_COOLOFF_TIME = 1  # Lockout time in hours
+AXES_LOCKOUT_CALLABLE = "axes.handlers.proxy.lockout"  # Default lockout handler
+AXES_RESET_ON_SUCCESS = True  # Reset failed attempts after a successful login
+AXES_USE_USER_AGENT = True  # Track login attempts based on user agent
+AXES_ONLY_USER_FAILURES = True  # Track by username only
+
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 APPEND_SLASH = False
 
@@ -151,6 +161,14 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Block user after 5 failed login attempts
+AXES_FAILURE_LIMIT = 5
+
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 
 REST_FRAMEWORK = {
