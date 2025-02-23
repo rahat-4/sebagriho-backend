@@ -41,8 +41,8 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    "autoslug",
     "axes",
+    "autoslug",
     "phonenumber_field",
     "rest_framework",
     "rest_framework_simplejwt",
@@ -62,7 +62,6 @@ PROJECT_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
-    "axes.middleware.AxesMiddleware",  # To prevent brute force attacks
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -70,6 +69,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",  # To prevent brute force attacks
 ]
 
 AUTH_USER_MODEL = "authentication.User"
@@ -77,10 +77,7 @@ AUTH_USER_MODEL = "authentication.User"
 # Block user after 5 failed login attempts
 AXES_FAILURE_LIMIT = 5  # Lockout after 5 failed attempts
 AXES_COOLOFF_TIME = 1  # Lockout time in hours
-AXES_LOCKOUT_CALLABLE = "axes.handlers.proxy.lockout"  # Default lockout handler
 AXES_RESET_ON_SUCCESS = True  # Reset failed attempts after a successful login
-AXES_USE_USER_AGENT = True  # Track login attempts based on user agent
-AXES_ONLY_USER_FAILURES = True  # Track by username only
 
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
@@ -157,6 +154,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -169,7 +167,6 @@ AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
-
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
