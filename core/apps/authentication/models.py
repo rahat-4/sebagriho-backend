@@ -65,7 +65,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_patient = models.BooleanField(default=False)
-    is_admin = models.BooleanField(default=False)
+    is_owner = models.BooleanField(default=False)
 
     objects = UserManager()
 

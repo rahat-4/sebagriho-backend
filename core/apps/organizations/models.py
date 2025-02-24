@@ -85,6 +85,18 @@ class Organization(BaseModelWithUid):
 
 
 class OrganizationMember(BaseModelWithUid):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="organization_members"
+    )
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="members"
+    )
+
+    def __str__(self):
+        return f"{self.user.phone} → {self.organization.name}"
+
+
+class OrganizationRole(BaseModelWithUid):
     name = models.CharField(max_length=100)
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="roles"
@@ -110,7 +122,7 @@ class OrganizationPermission(BaseModelWithUid):
         related_name="organization_permissions",
     )
     organization_member = models.ForeignKey(
-        OrganizationMember,
+        OrganizationRole,
         on_delete=models.CASCADE,
         related_name="member_permissions",
     )

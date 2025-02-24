@@ -9,6 +9,8 @@ User = get_user_model()
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+    phone = PhoneNumberField(required=True)
+
     class Meta:
         model = User
         fields = [

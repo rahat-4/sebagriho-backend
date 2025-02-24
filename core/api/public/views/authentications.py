@@ -6,10 +6,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
-from core.api.serializers.authentications import (
-    UserRegisterSerializer,
-    UserLoginSerializer,
-)
+from ..serializers.authentications import UserRegisterSerializer, UserLoginSerializer
 
 
 class UserRegisterView(CreateAPIView):
