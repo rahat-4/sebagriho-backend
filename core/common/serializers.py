@@ -28,11 +28,18 @@ class UserSlimSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            "uid",
             "first_name",
             "last_name",
             "phone",
             "email",
             "gender",
+            "nid",
+            "nid_front",
+            "nid_back",
+            "avatar",
+            "blood_group",
+            "date_of_birth",
             "password",
             "confirm_password",
         ]

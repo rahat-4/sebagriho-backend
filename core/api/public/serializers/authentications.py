@@ -10,6 +10,7 @@ User = get_user_model()
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     phone = PhoneNumberField(required=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
 
     class Meta:
         model = User
@@ -23,6 +24,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "gender",
             "date_of_birth",
             "blood_group",
+            "is_owner",
             "password",
             "confirm_password",
         ]
@@ -30,6 +32,14 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "password": {"write_only": True},
             "confirm_password": {"write_only": True},
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            if request.user.is_superuser or request.user.is_staff:
+                return
+        self.fields.pop("is_owner")
 
     def validate(self, attrs):
         if attrs["password"] != attrs["confirm_password"]:

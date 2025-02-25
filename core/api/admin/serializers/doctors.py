@@ -27,7 +27,7 @@ from common.serializers import (
 User = get_user_model()
 
 
-class AdminDoctorListSerializer(serializers.ModelSerializer):
+class AdminDoctorListCreateSerializer(serializers.ModelSerializer):
     user = UserSlimSerializer()
     degrees = DegreeSlimSerializer(many=True)
     achievements = AchievementSlimSerializer(many=True)

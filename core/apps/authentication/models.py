@@ -21,9 +21,7 @@ from common.models import BaseModelWithUid
 class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
     slug = AutoSlugField(populate_from=get_user_slug, unique=True)
     phone = PhoneNumberField(unique=True)
-    email = models.EmailField(
-        verbose_name="Email Address", max_length=255, unique=True, blank=True, null=True
-    )
+    email = models.EmailField(max_length=255, unique=True, blank=True, null=True)
     secondary_phone = PhoneNumberField(blank=True, null=True)
     secondary_email = models.EmailField(blank=True, null=True)
     first_name = models.CharField(max_length=255, blank=True, null=True)
@@ -64,7 +62,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    is_patient = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
     is_owner = models.BooleanField(default=False)
 
     objects = UserManager()
@@ -97,4 +95,4 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
         """
         Return the most descriptive name available.
         """
-        return self.get_full_name() if self.get_full_name() else self.phone
+        return self.get_full_name() if self.get_full_name() else str(self.phone)
