@@ -12,7 +12,30 @@ class Command(BaseCommand):
 
         # Run makemigrations command
         self.stdout.write(self.style.SUCCESS("Running makemigrations command..."))
-        call_command("makemigrations")
+        call_command(
+            "makemigrations",
+            "authentication",
+        )
+        call_command(
+            "makemigrations",
+            "organizations",
+        )
+        call_command(
+            "makemigrations",
+            "patients",
+        )
+        call_command(
+            "makemigrations",
+            "doctors",
+        )
+        call_command(
+            "makemigrations",
+            "appointments",
+        )
+        call_command(
+            "makemigrations",
+            "prescriptions",
+        )
 
         # Run migrate command
         self.stdout.write(self.style.SUCCESS("Running migrate command..."))

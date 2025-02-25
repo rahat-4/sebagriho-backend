@@ -7,12 +7,12 @@ from ..views.organizations import (
 
 urlpatterns = [
     path(
-        "organizations/<uuid:uid>/",
+        "/<uuid:uid>",
         OrganizationMemberRetrieveUpdateDestroyView.as_view(),
         name="organization-retrieve-update-destroy",
     ),
     path(
-        "organizations/",
+        "",
         OrganizationMemberListCreateView.as_view(),
         name="organization-list-create",
     ),
