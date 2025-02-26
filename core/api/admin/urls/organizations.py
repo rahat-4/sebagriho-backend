@@ -1,19 +1,19 @@
 from django.urls import path
 
 from ..views.organizations import (
-    OrganizationMemberListCreateView,
-    OrganizationMemberRetrieveUpdateDestroyView,
+    OrganizationMemberListCreate,
+    OrganizationMemberRetrieveUpdateDestroy,
 )
 
 urlpatterns = [
     path(
-        "/<uuid:uid>",
-        OrganizationMemberRetrieveUpdateDestroyView.as_view(),
-        name="organization-retrieve-update-destroy",
+        "/<uuid:organization_member_uid>",
+        OrganizationMemberRetrieveUpdateDestroy.as_view(),
+        name="admin.organization-retrieve-update-destroy",
     ),
     path(
         "",
-        OrganizationMemberListCreateView.as_view(),
-        name="organization-list-create",
+        OrganizationMemberListCreate.as_view(),
+        name="admin.organization-list-create",
     ),
 ]

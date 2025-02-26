@@ -16,15 +16,6 @@ User = get_user_model()
 
 
 class UserSlimSerializer(serializers.ModelSerializer):
-    confirm_password = serializers.CharField(write_only=True)
-
-    def validate(self, attrs):
-        if attrs["password"] != attrs["confirm_password"]:
-            raise serializers.ValidationError(
-                {"password": "Password fields didn't match."}
-            )
-        return attrs
-
     class Meta:
         model = User
         fields = [
@@ -40,8 +31,6 @@ class UserSlimSerializer(serializers.ModelSerializer):
             "avatar",
             "blood_group",
             "date_of_birth",
-            "password",
-            "confirm_password",
         ]
 
 

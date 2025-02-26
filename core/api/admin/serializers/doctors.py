@@ -27,11 +27,25 @@ from common.serializers import (
 User = get_user_model()
 
 
+class CompleteProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "avatar",
+            "nid",
+            "nid_front",
+            "nid_back",
+        ]
+
+
 class AdminDoctorListCreateSerializer(serializers.ModelSerializer):
-    user = UserSlimSerializer()
-    degrees = DegreeSlimSerializer(many=True)
-    achievements = AchievementSlimSerializer(many=True)
-    affiliations = AffiliationSlimSerializer(many=True)
+    user = serializers.SlugRelatedField(
+        slug_field="uid", queryset=User.objects.all(), write_only=True
+    )
+    complete_profile = CompleteProfileSerializer(write_only=True)
+    degrees = DegreeSlimSerializer(many=True, required=False)
+    achievements = AchievementSlimSerializer(many=True, required=False)
+    affiliations = AffiliationSlimSerializer(many=True, required=False)
     departments = serializers.SlugRelatedField(
         many=True,
         slug_field="uid",
@@ -53,19 +67,16 @@ class AdminDoctorListCreateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        departments = DepartmentSlimSerializer(
+        representation["user"] = UserSlimSerializer(instance.user).data
+        representation["departments"] = DepartmentSlimSerializer(
             instance.departments.all(), many=True
         ).data
-        specialties = SpecialtySlimSerializer(
+        representation["specialties"] = SpecialtySlimSerializer(
             instance.specialties.all(), many=True
         ).data
-        languages_spoken = LanguageSpokenSlimSerializer(
+        representation["languages_spoken"] = LanguageSpokenSlimSerializer(
             instance.languages_spoken.all(), many=True
         ).data
-
-        representation["departments"] = departments
-        representation["specialties"] = specialties
-        representation["languages_spoken"] = languages_spoken
 
         return representation
 
@@ -74,6 +85,7 @@ class AdminDoctorListCreateSerializer(serializers.ModelSerializer):
         fields = [
             "uid",
             "user",
+            "complete_profile",
             "registration_number",
             "experience",
             "about",
@@ -91,25 +103,28 @@ class AdminDoctorListCreateSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        # Use atomic transaction to ensure data integrity
         with transaction.atomic():
-            # Extract nested data
-            departments = validated_data.pop("departments")
-            languages_spoken = validated_data.pop("languages_spoken")
-            specialty_instances = validated_data.pop("specialties")
-            degrees_data = validated_data.pop("degrees")
-            affiliations_data = validated_data.pop("affiliations")
+            # Extract related fields
+            user = validated_data.pop("user", {})
+            complete_profile_data = validated_data.pop("complete_profile", {})
+            departments = validated_data.pop("departments", [])
+            specialties = validated_data.pop("specialties", [])
+            languages_spoken = validated_data.pop("languages_spoken", [])
+            degrees_data = validated_data.pop("degrees", [])
+            affiliations_data = validated_data.pop("affiliations", [])
             achievements_data = validated_data.pop("achievements", [])
 
             # Handle user creation
-            user_data = validated_data.pop("user")
-            user_data.pop("confirm_password")
-            user = User.objects.create(**user_data)
+            user.avatar = complete_profile_data.get("avatar")
+            user.nid = complete_profile_data.get("nid")
+            user.nid_front = complete_profile_data.get("nid_front")
+            user.nid_back = complete_profile_data.get("nid_back")
+            user.save()
 
-            # Create Doctor instance
+            # Create doctor
             doctor_instance = Doctor.objects.create(user=user, **validated_data)
 
-            # Bulk create many-to-many relations
+            # Bulk create degrees, achievements, affiliations (if not existing)
             degrees = [Degree.objects.get_or_create(**data)[0] for data in degrees_data]
             achievements = [
                 Achievement.objects.get_or_create(**data)[0]
@@ -120,12 +135,12 @@ class AdminDoctorListCreateSerializer(serializers.ModelSerializer):
                 for data in affiliations_data
             ]
 
-            # Add many-to-many relations
-            doctor_instance.degrees.add(*degrees)
-            doctor_instance.departments.add(*departments)
-            doctor_instance.specialties.add(*specialty_instances)
-            doctor_instance.achievements.add(*achievements)
-            doctor_instance.affiliations.add(*affiliations)
-            doctor_instance.languages_spoken.add(*languages_spoken)
+            # Use .set() instead of .add() for better efficiency
+            doctor_instance.departments.set(departments)
+            doctor_instance.specialties.set(specialties)
+            doctor_instance.languages_spoken.set(languages_spoken)
+            doctor_instance.degrees.set(degrees)
+            doctor_instance.achievements.set(achievements)
+            doctor_instance.affiliations.set(affiliations)
 
             return doctor_instance

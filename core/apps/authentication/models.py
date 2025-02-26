@@ -96,3 +96,42 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
         Return the most descriptive name available.
         """
         return self.get_full_name() if self.get_full_name() else str(self.phone)
+
+
+class RegistrationSession(BaseModelWithUid):
+    first_name = models.CharField(max_length=255, blank=True, null=True)
+    last_name = models.CharField(max_length=255, blank=True, null=True)
+    phone = PhoneNumberField(unique=True)
+    email = models.EmailField(max_length=255, unique=True, blank=True, null=True)
+    gender = models.CharField(
+        max_length=20,
+        blank=True,
+        choices=UserGender.choices,
+        default=UserGender.MALE,
+    )
+    blood_group = models.CharField(
+        max_length=5, choices=BloodGroups.choices, blank=True, null=True
+    )
+    date_of_birth = models.DateField(blank=True, null=True)
+    is_owner = models.BooleanField(default=False)
+
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    otp_created_at = models.DateTimeField(blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            # Session expire after 1 hour by default
+            self.expires_at = timezone.now() + timezone.timedelta(hours=1)
+        super().save(*args, **kwargs)
+
+    def is_expired(self):
+        return self.expires_at < timezone.now()
+
+    def is_otp_expired(self):
+        if not self.otp_created_at:
+            return True
+
+        # OTP expire after 5 minutes
+        return timezone.now() > (self.otp_created_at + timezone.timedelta(minutes=5))

@@ -1,9 +1,23 @@
 from django.urls import path
 
-from ..views.authentications import UserRegisterView, UserLoginView
+from ..views.authentications import (
+    SetPassword,
+    UserLogin,
+    InitialRegistration,
+    OtpVerification,
+)
 
 urlpatterns = [
-    path("/login", UserLoginView.as_view(), name="user-login"),
-    # path("/set-password")
-    path("/register", UserRegisterView.as_view(), name="user-register"),
+    path("/login", UserLogin.as_view(), name="public.user-login"),
+    path("/set-password", SetPassword.as_view(), name="public.set-password"),
+    path(
+        "/otp-verification",
+        OtpVerification.as_view(),
+        name="public.otp-verification",
+    ),
+    path(
+        "/initial-registration",
+        InitialRegistration.as_view(),
+        name="public.initial-registration",
+    ),
 ]
