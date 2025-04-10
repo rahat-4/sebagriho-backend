@@ -62,19 +62,19 @@ class Organization(BaseModelWithUid):
             )
         ]
 
-    def clean(self):
-        super().clean()
-        # Ensure that subdomain is required for non-chamber and non-pharmacy organizations
-        if (
-            self.organization_type
-            not in (OrganizationType.CHAMBER, OrganizationType.PHARMACY)
-            and not self.subdomain
-        ):
-            raise ValidationError(
-                {
-                    "subdomain": "Subdomain is required for non-chamber and non-pharmacy organizations."
-                }
-            )
+    # def clean(self):
+    #     super().clean()
+    #     # Ensure that subdomain is required for non-chamber and non-pharmacy organizations
+    #     if (
+    #         self.organization_type
+    #         not in (OrganizationType.CHAMBER, OrganizationType.PHARMACY)
+    #         and not self.subdomain
+    #     ):
+    #         raise ValidationError(
+    #             {
+    #                 "subdomain": "Subdomain is required for non-chamber and non-pharmacy organizations."
+    #             }
+    #         )
 
     def save(self, *args, **kwargs):
         self.full_clean()  # Ensure validation before saving

@@ -36,3 +36,9 @@ class OrganizationMemberSerializer(serializers.ModelSerializer):
             **validated_data,
         )
         return organization_member
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = "__all__"
