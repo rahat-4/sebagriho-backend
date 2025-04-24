@@ -173,3 +173,5 @@ cython_debug/
 # Hide migration files
 **/migrations/*
 !**/migrations/__init__.py
+
+.env*
