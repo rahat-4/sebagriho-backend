@@ -36,6 +36,10 @@ class Command(BaseCommand):
             "makemigrations",
             "prescriptions",
         )
+        call_command(
+            "makemigrations",
+            "medicines",
+        )
 
         # Run migrate command
         self.stdout.write(self.style.SUCCESS("Running migrate command..."))
