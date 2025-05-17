@@ -10,7 +10,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from common.models import BaseModelWithUid
 
 from .choices import OrganizationType, OrganizationStatus
-from .utils import get_organization_slug
+from .utils import get_organization_slug, get_organization_media_path_prefix
 
 User = get_user_model()
 
@@ -18,6 +18,9 @@ User = get_user_model()
 class Organization(BaseModelWithUid):
     slug = AutoSlugField(unique=True, populate_from=get_organization_slug)
     name = models.CharField(max_length=255)
+    logo = models.ImageField(
+        upload_to=get_organization_media_path_prefix, blank=True, null=True
+    )
     subdomain = models.SlugField(
         max_length=255,
         unique=True,

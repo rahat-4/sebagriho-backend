@@ -15,15 +15,18 @@ User = get_user_model()
 
 class InitialRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = RegistrationSession
         fields = [
+            "uid",
+            "avatar",
             "first_name",
             "last_name",
             "phone",
             "email",
             "gender",
-            "date_of_birth",
-            "blood_group",
+            "nid",
+            "nid_front",
+            "nid_back",
             "is_owner",
         ]
 

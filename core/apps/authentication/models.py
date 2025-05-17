@@ -99,6 +99,12 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
 
 
 class RegistrationSession(BaseModelWithUid):
+    avatar = models.ImageField(
+        "Avatar",
+        upload_to=get_user_media_path_prefix,
+        blank=True,
+        null=True,
+    )
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     phone = PhoneNumberField(unique=True)
@@ -108,6 +114,13 @@ class RegistrationSession(BaseModelWithUid):
         blank=True,
         choices=UserGender.choices,
         default=UserGender.MALE,
+    )
+    nid = models.CharField(max_length=20, blank=True, null=True)
+    nid_front = models.ImageField(
+        upload_to=get_user_media_path_prefix, blank=True, null=True
+    )
+    nid_back = models.ImageField(
+        upload_to=get_user_media_path_prefix, blank=True, null=True
     )
     blood_group = models.CharField(
         max_length=5, choices=BloodGroups.choices, blank=True, null=True
