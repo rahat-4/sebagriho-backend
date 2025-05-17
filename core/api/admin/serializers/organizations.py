@@ -30,12 +30,16 @@ class UserSlimSerializer(serializers.ModelSerializer):
 
 
 class OrganizationSlimSerializers(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+    organization_type = serializers.SerializerMethodField()
+
     class Meta:
         model = Organization
         fields = [
             "uid",
             "slug",
             "name",
+            "parent",
             "logo",
             "organization_type",
             "description",
@@ -52,6 +56,12 @@ class OrganizationSlimSerializers(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def get_status(self, obj):
+        return obj.get_status_display()
+
+    def get_organization_type(self, obj):
+        return obj.get_organization_type_display()
 
 
 class OrganizationMemberSerializer(serializers.ModelSerializer):
