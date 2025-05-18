@@ -29,7 +29,7 @@ class InitialRegistration(APIView):
                     "session_id": session.uid,
                     "otp": session.otp,  # Remove this in production
                 },
-                status=status.HTTP_200_OK,
+                status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
