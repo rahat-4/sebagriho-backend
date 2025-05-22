@@ -7,4 +7,5 @@ urlpatterns = [
     # base urls
     path("api/admin", include("api.admin.urls")),
     path("api/public", include("api.public.urls")),
+    path("api/organization", include("api.organization.urls")),
 ]

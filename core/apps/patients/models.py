@@ -5,6 +5,9 @@ from django.db.models.signals import pre_save
 
 from autoslug import AutoSlugField
 
+from phonenumber_field.modelfields import PhoneNumberField
+
+
 from apps.authentication.choices import BloodGroups
 
 from common.models import BaseModelWithUid
@@ -22,6 +25,10 @@ class Patient(BaseModelWithUid):
     status = models.CharField(
         max_length=20, choices=PatientStatus.choices, default=PatientStatus.ACTIVE
     )
+    # Homeopathic
+    old_serial_number = models.PositiveIntegerField(blank=True, null=True)
+    relative_phone = PhoneNumberField(blank=True, null=True)
+    address = models.CharField(max_length=500, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="patients")
 
     def __str__(self):
