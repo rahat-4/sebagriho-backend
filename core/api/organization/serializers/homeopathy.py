@@ -8,12 +8,15 @@ from apps.patients.models import Patient
 User = get_user_model()
 
 
-class HomeopathyPatientSerializer(serializers.ModelSerializer):
+class HomeopathyPatientListSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name")
     last_name = serializers.CharField(source="user.last_name", allow_blank=True)
     phone = serializers.CharField(source="user.phone")
     avatar = serializers.ImageField(
         source="user.avatar", allow_null=True, required=False
+    )
+    gender = serializers.CharField(
+        source="user.gender", allow_blank=True, required=False
     )
 
     class Meta:
@@ -24,10 +27,15 @@ class HomeopathyPatientSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone",
+            "age",
+            "gender",
             "serial_number",
             "old_serial_number",
             "relative_phone",
             "address",
+            "miasm_type",
+            "case_history",
+            "habits",
             "status",
             "slug",
             "created_at",
@@ -57,3 +65,67 @@ class HomeopathyPatientSerializer(serializers.ModelSerializer):
             patient = Patient.objects.create(user=user, **validated_data)
 
             return patient
+
+
+class HomeopathyPatientDetailSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(
+        source="user.first_name", allow_blank=True, required=False
+    )
+    last_name = serializers.CharField(
+        source="user.last_name", allow_blank=True, required=False
+    )
+    phone = serializers.CharField(source="user.phone", allow_blank=True, required=False)
+    avatar = serializers.ImageField(
+        source="user.avatar", allow_null=True, required=False
+    )
+    gender = serializers.CharField(
+        source="user.gender", allow_blank=True, required=False
+    )
+
+    class Meta:
+        model = Patient
+        fields = [
+            "uid",
+            "avatar",
+            "first_name",
+            "last_name",
+            "phone",
+            "age",
+            "gender",
+            "serial_number",
+            "old_serial_number",
+            "relative_phone",
+            "address",
+            "miasm_type",
+            "case_history",
+            "habits",
+            "status",
+            "slug",
+            "created_at",
+            "updated_at",
+        ]
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", None)
+        if user_data:
+            user = instance.user
+            user.first_name = user_data.get("first_name", user.first_name)
+            user.last_name = user_data.get("last_name", user.last_name)
+            user.phone = user_data.get("phone", user.phone)
+            user.avatar = user_data.get("avatar", user.avatar)
+            user.save()
+
+        instance.age = validated_data.get("age", instance.age)
+        instance.relative_phone = validated_data.get(
+            "relative_phone", instance.relative_phone
+        )
+        instance.address = validated_data.get("address", instance.address)
+        instance.miasm_type = validated_data.get("miasm_type", instance.miasm_type)
+        instance.case_history = validated_data.get(
+            "case_history", instance.case_history
+        )
+        instance.habits = validated_data.get("habits", instance.habits)
+        instance.status = validated_data.get("status", instance.status)
+
+        instance.save()
+        return instance
