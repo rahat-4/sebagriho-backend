@@ -1,24 +1,78 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
-from apps.patients.models import Patient
+from apps.authentication.choices import UserStatus
+from apps.homeopathy.models import (
+    HomeopathicPatient,
+    HomeopathicAppointment,
+    HomeopathicMedicine,
+)
+from apps.homeopathy.choices import HomeopathicPatientStatus, MiasmType
 
 from ..serializers.homeopathy import (
-    HomeopathyPatientListSerializer,
-    HomeopathyPatientDetailSerializer,
+    HomeopathicPatientListSerializer,
+    HomeopathicPatientDetailSerializer,
+    HomeopathicAppointmentListSerializer,
+    HomeopathicAppointmentDetailSerializer,
+    HomeopathicMedicineListSerializer,
+    HomeopathicMedicineDetailSerializer,
 )
 
 
-class HomeopathyPatientListView(ListCreateAPIView):
-    queryset = Patient.objects.all()
-    serializer_class = HomeopathyPatientListSerializer
+class HomeopathicPatientListView(ListCreateAPIView):
+    queryset = HomeopathicPatient.objects.all()
+    serializer_class = HomeopathicPatientListSerializer
     permission_classes = []
 
 
-class HomeopathyPatientDetailView(RetrieveUpdateDestroyAPIView):
-    queryset = Patient.objects.all()
-    serializer_class = HomeopathyPatientDetailSerializer
+class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = HomeopathicPatient.objects.all()
+    serializer_class = HomeopathicPatientDetailSerializer
     permission_classes = []
 
     def get_object(self):
         serial_number = self.kwargs.get("serial_number")
         return self.queryset.get(serial_number=serial_number)
+
+    def perform_destroy(self, instance):
+        instance.user.status = UserStatus.DELETED
+        instance.user.save()
+        instance.status = HomeopathicPatientStatus.DELETED
+        instance.save()
+
+
+class HomeopathicAppointmentListView(ListCreateAPIView):
+    queryset = HomeopathicAppointment.objects.all()
+    serializer_class = HomeopathicAppointmentListSerializer
+    permission_classes = []
+
+
+class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = HomeopathicAppointment.objects.all()
+    serializer_class = HomeopathicAppointmentDetailSerializer
+    permission_classes = []
+
+    def get_object(self):
+        uid = self.kwargs.get("uid")
+        return self.queryset.get(uid=uid)
+
+    def perform_destroy(self, instance):
+        pass
+
+
+class HomeopathicMedicineListView(ListCreateAPIView):
+    queryset = HomeopathicMedicine.objects.all()
+    serializer_class = HomeopathicMedicineListSerializer
+    permission_classes = []
+
+
+class HomeopathicMedicineDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = HomeopathicMedicine.objects.all()
+    serializer_class = HomeopathicMedicineDetailSerializer
+    permission_classes = []
+
+    def get_object(self):
+        uid = self.kwargs.get("uid")
+        return self.queryset.get(uid=uid)
+
+    def perform_destroy(self, instance):
+        pass

@@ -6,6 +6,7 @@ class UserStatus(models.TextChoices):
     ACTIVE = "ACTIVE", "Active"
     PAUSED = "PAUSED", "Paused"
     REMOVED = "REMOVED", "Removed"
+    DELETED = "DELETED", "Deleted"
 
 
 class UserGender(models.TextChoices):

@@ -3,12 +3,16 @@ from django.db import transaction
 
 from rest_framework import serializers
 
-from apps.patients.models import Patient
+from apps.homeopathy.models import (
+    HomeopathicPatient,
+    HomeopathicAppointment,
+    HomeopathicMedicine,
+)
 
 User = get_user_model()
 
 
-class HomeopathyPatientListSerializer(serializers.ModelSerializer):
+class HomeopathicPatientListSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name")
     last_name = serializers.CharField(source="user.last_name", allow_blank=True)
     phone = serializers.CharField(source="user.phone")
@@ -20,7 +24,7 @@ class HomeopathyPatientListSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Patient
+        model = HomeopathicPatient
         fields = [
             "uid",
             "avatar",
@@ -62,12 +66,12 @@ class HomeopathyPatientListSerializer(serializers.ModelSerializer):
                 "avatar": user.get("avatar"),
             }
             user = User.objects.create_user(**user_data)
-            patient = Patient.objects.create(user=user, **validated_data)
+            patient = HomeopathicPatient.objects.create(user=user, **validated_data)
 
             return patient
 
 
-class HomeopathyPatientDetailSerializer(serializers.ModelSerializer):
+class HomeopathicPatientDetailSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
         source="user.first_name", allow_blank=True, required=False
     )
@@ -83,7 +87,7 @@ class HomeopathyPatientDetailSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Patient
+        model = HomeopathicPatient
         fields = [
             "uid",
             "avatar",
@@ -129,3 +133,75 @@ class HomeopathyPatientDetailSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class HomeopathicAppointmentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeopathicAppointment
+        fields = [
+            "uid",
+            "slug",
+            "symptoms",
+            "treatment_effectiveness",
+            "homeopathic_patient",
+            "organization",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class HomeopathicAppointmentDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeopathicAppointment
+        fields = [
+            "uid",
+            "slug",
+            "symptoms",
+            "treatment_effectiveness",
+            "homeopathic_patient",
+            "organization",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class HomeopathicMedicineListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeopathicMedicine
+        fields = [
+            "uid",
+            "name",
+            "power",
+            "expiration_date",
+            "is_available",
+            "manufacturer",
+            "total_quantity",
+            "unit_price",
+            "description",
+            "batch_number",
+            "homeopathic_patient",
+            "organization",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class HomeopathicMedicineDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeopathicMedicine
+        fields = [
+            "uid",
+            "name",
+            "power",
+            "expiration_date",
+            "is_available",
+            "manufacturer",
+            "total_quantity",
+            "unit_price",
+            "description",
+            "batch_number",
+            "homeopathic_patient",
+            "organization",
+            "created_at",
+            "updated_at",
+        ]

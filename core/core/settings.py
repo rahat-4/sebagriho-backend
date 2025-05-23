@@ -48,6 +48,7 @@ PROJECT_APPS = [
     "apps.prescriptions",
     "apps.appointments",
     "apps.medicines",
+    "apps.homeopathy",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
