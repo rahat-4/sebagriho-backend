@@ -117,6 +117,7 @@ class HomeopathicPatientDetailSerializer(serializers.ModelSerializer):
             user.last_name = user_data.get("last_name", user.last_name)
             user.phone = user_data.get("phone", user.phone)
             user.avatar = user_data.get("avatar", user.avatar)
+            user.gender = user_data.get("gender", user.gender)
             user.save()
 
         instance.age = validated_data.get("age", instance.age)

@@ -40,6 +40,10 @@ class Command(BaseCommand):
             "makemigrations",
             "medicines",
         )
+        call_command(
+            "makemigrations",
+            "homeopathy",
+        )
 
         # Run migrate command
         self.stdout.write(self.style.SUCCESS("Running migrate command..."))

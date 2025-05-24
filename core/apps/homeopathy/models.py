@@ -40,11 +40,11 @@ class HomeopathicPatient(BaseModelWithUid):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="homeopathic_patients"
     )
-    organization = models.ForeignKey(
-        "organizations.Organization",
-        on_delete=models.CASCADE,
-        related_name="organization_homeopathic_patients",
-    )
+    # organization = models.ForeignKey(
+    #     "organizations.Organization",
+    #     on_delete=models.CASCADE,
+    #     related_name="organization_homeopathic_patients",
+    # )
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.serial_number}"
@@ -59,11 +59,11 @@ class HomeopathicAppointment(BaseModelWithUid):
         on_delete=models.CASCADE,
         related_name="homeopathic_patient_appointments",
     )
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name="organizations_homeopathic_patients_appointments",
-    )
+    # organization = models.ForeignKey(
+    #     Organization,
+    #     on_delete=models.CASCADE,
+    #     related_name="organizations_homeopathic_patients_appointments",
+    # )
 
     def __str__(self):
         return f"{self.organization.name} - {self.homeopathic_patient.serial_number}"
@@ -88,14 +88,16 @@ class HomeopathicMedicine(BaseModelWithUid):
         blank=True,
         null=True,
     )
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name="organizations_homeopathic_patients_medicines",
-    )
+    # organization = models.ForeignKey(
+    #     Organization,
+    #     on_delete=models.CASCADE,
+    #     related_name="organizations_homeopathic_patients_medicines",
+    # )
 
+    # def __str__(self):
+    #     return f"{self.organization.name} - {self.homeopathic_patient.serial_number}"
     def __str__(self):
-        return f"{self.organization.name} - {self.homeopathic_patient.serial_number}"
+        return f"{self.homeopathic_patient.serial_number}"
 
 
 @receiver(pre_save, sender=HomeopathicPatient)
