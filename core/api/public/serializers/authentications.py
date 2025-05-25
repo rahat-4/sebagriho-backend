@@ -177,32 +177,3 @@ class SetPasswordSerializer(serializers.Serializer):
         session.delete()
 
         return user
-
-
-class UserLoginSerializer(serializers.Serializer):
-    identifier = serializers.CharField(required=True)
-    password = serializers.CharField(required=True, write_only=True)
-
-    def validate(self, attrs):
-        identifier = attrs.get("identifier")
-        password = attrs.get("password")
-
-        user = (
-            User.objects.filter(phone=identifier).first()
-            or User.objects.filter(email=identifier).first()
-        )
-
-        if user is None:
-            raise serializers.ValidationError(
-                {"identifier": "User with this identifier does not exist."}
-            )
-
-        user = authenticate(username=user.phone, password=password)
-
-        if user is None:
-            raise serializers.ValidationError({"password": "Password is incorrect."})
-
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-
-        return {"user": user, "refresh": refresh, "access_token": access_token}

@@ -30,7 +30,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    # "axes",
+    "axes",
     "autoslug",
     "phonenumber_field",
     "rest_framework",
@@ -55,6 +55,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "common.middleware.JWTAuthCookieMiddleware",  # Custom middleware for JWT auth via cookies
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -62,20 +63,21 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # "axes.middleware.AxesMiddleware",  # To prevent brute force attacks
+    "axes.middleware.AxesMiddleware",  # To prevent brute force attacks
 ]
 
 AUTH_USER_MODEL = "authentication.User"
 
-# Block user after 5 failed login attempts
-# AXES_FAILURE_LIMIT = 5  # Lockout after 5 failed attempts
-# AXES_COOLOFF_TIME = 1  # Lockout time in hours
-# AXES_RESET_ON_SUCCESS = True  # Reset failed attempts after a successful login
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
-# AUTHENTICATION_BACKENDS = [
-#     "axes.backends.AxesBackend",
-#     "django.contrib.auth.backends.ModelBackend",
-# ]
+# Block user after 5 failed login attempts
+AXES_FAILURE_LIMIT = 5  # Lockout after 5 failed attempts
+AXES_COOLOFF_TIME = 1  # Lockout time in hours
+AXES_RESET_ON_SUCCESS = True  # Reset failed attempts after a successful login
+
 
 APPEND_SLASH = False
 
@@ -156,11 +158,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticated",
     ],
-    # "DEFAULT_AUTHENTICATION_CLASSES": [
-    #     "rest_framework_simplejwt.authentication.JWTAuthentication",
-    # ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
 }
 
 SIMPLE_JWT = {
