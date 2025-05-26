@@ -15,7 +15,7 @@ urlpatterns = [
     path("api/public", include("api.public.urls")),
     path("api/organization", include("api.organization.urls")),
     # Authentication URLs
-    path("/logout", LogoutView.as_view(), name="ogout"),
-    path("/login", CookieTokenObtainPairView.as_view(), name="token-obtain-pair"),
-    path("/token/refresh", CookieTokenRefreshView.as_view(), name="token-refresh"),
+    path("logout", LogoutView.as_view(), name="ogout"),
+    path("login", CookieTokenObtainPairView.as_view(), name="token-obtain-pair"),
+    path("token/refresh", CookieTokenRefreshView.as_view(), name="token-refresh"),
 ]

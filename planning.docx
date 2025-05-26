@@ -1,0 +1,13 @@
+Admin:
+1. Organization [CRUD]
+2. Dashboard
+
+Organization
+1. Patient [CRUD]
+2. Medicine [CRUD]
+3. Appointment [CRUD]
+4. Organization's profile update
+5. Organization user profile update
+6. Forget password
+7. Reset password
+8. Dashboard

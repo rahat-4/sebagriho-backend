@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -100,7 +101,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             response.data = {
                 "message": "Login successful.",
             }
-            return response
+        return response
 
 
 class CookieTokenRefreshView(TokenRefreshView):
@@ -113,25 +114,37 @@ class CookieTokenRefreshView(TokenRefreshView):
             )
 
         request.data["refresh"] = refresh_token
-        response = super().post(request, *args, **kwargs)
+        try:
+            response = super().post(request, *args, **kwargs)
+        except TokenError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
 
         if response.status_code == status.HTTP_200_OK:
             access = response.data.get("access")
+            refresh = response.data.get("refresh")
 
             response.set_cookie(
                 key="access_token",
                 value=access,
                 httponly=True,
                 secure=False,
-                samesite="None",  # Allow cross-site requests
-                max_age=900,  # 15 minutes
+                samesite="None",
+                max_age=900,
             )
-            response.delete_cookie("refresh_token")  # clear old refresh token
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh,
+                httponly=True,
+                secure=False,
+                samesite="None",
+                max_age=86400,
+            )
 
             response.data = {
                 "message": "Access token refreshed.",
             }
-            return response
+
+        return response
 
 
 class LogoutView(APIView):
