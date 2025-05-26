@@ -30,8 +30,8 @@ class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = []
 
     def get_object(self):
-        serial_number = self.kwargs.get("serial_number")
-        return self.queryset.get(serial_number=serial_number)
+        patient_uid = self.kwargs.get("patient_uid")
+        return self.queryset.get(uid=patient_uid)
 
     def perform_destroy(self, instance):
         instance.user.status = UserStatus.DELETED

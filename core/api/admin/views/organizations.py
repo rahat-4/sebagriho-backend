@@ -4,15 +4,18 @@ from rest_framework.exceptions import ValidationError
 from apps.organizations.models import Organization, OrganizationMember
 from apps.organizations.choices import OrganizationStatus
 
+from common.permission.admin_permission import IsAdmin
+
 from ..serializers.organizations import (
-    OrganizationSlimSerializers,
+    OrganizationListSerializers,
     OrganizationMemberSerializer,
 )
 
 
-class OrganizationListCreate(ListCreateAPIView):
-    queryset = Organization.objects.filter()
-    serializer_class = OrganizationSlimSerializers
+class OrganizationListView(ListCreateAPIView):
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationListSerializers
+    permission_classes = [IsAdmin]
 
 
 class OrganizationMemberListCreate(ListCreateAPIView):

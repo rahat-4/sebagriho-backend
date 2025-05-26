@@ -10,6 +10,41 @@ from apps.organizations.models import Organization, OrganizationMember
 User = get_user_model()
 
 
+class OrganizationListSerializers(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+    organization_type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = [
+            "uid",
+            "slug",
+            "name",
+            "parent",
+            "logo",
+            "organization_type",
+            "description",
+            "status",
+            "phone",
+            "email",
+            "website",
+            "address",
+            "facebook",
+            "twitter",
+            "linkedin",
+            "instagram",
+            "youtube",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_status(self, obj):
+        return obj.get_status_display()
+
+    def get_organization_type(self, obj):
+        return obj.get_organization_type_display()
+
+
 class UserSlimSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

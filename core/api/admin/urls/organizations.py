@@ -1,7 +1,7 @@
 from django.urls import path
 
 from ..views.organizations import (
-    OrganizationListCreate,
+    OrganizationListView,
     OrganizationMemberListCreate,
     OrganizationMemberRetrieveUpdateDestroy,
 )
@@ -19,7 +19,7 @@ urlpatterns = [
     ),
     path(
         "",
-        OrganizationListCreate.as_view(),
+        OrganizationListView.as_view(),
         name="admin.organization-list-create",
     ),
 ]

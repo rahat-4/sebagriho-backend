@@ -84,7 +84,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                 key="access_token",
                 value=access,
                 httponly=True,
-                secure=True,  # Ensure this is set to True in production
+                secure=False,  # Ensure this is set to True in production
                 samesite="None",  # Allow cross-site requests
                 max_age=900,  # 15 minutes
             )
@@ -92,7 +92,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                 key="refresh_token",
                 value=refresh,
                 httponly=True,
-                secure=True,
+                secure=False,
                 samesite="None",  # Allow cross-site requests
                 max_age=86400,  # 1 day
             )
@@ -122,7 +122,7 @@ class CookieTokenRefreshView(TokenRefreshView):
                 key="access_token",
                 value=access,
                 httponly=True,
-                secure=True,
+                secure=False,
                 samesite="None",  # Allow cross-site requests
                 max_age=900,  # 15 minutes
             )
