@@ -10,7 +10,7 @@ class OrganizationType(models.TextChoices):
     DIAGNOSTIC_CENTER = "DIAGNOSTIC_CENTER", "Diagnostic Center"
     BLOOD_BANK = "BLOOD_BANK", "Blood Bank"
     AMBULANCE_SERVICE = "AMBULANCE_SERVICE", "Ambulance Service"
-    HOMEOPATHIC = "HOMEO_PATHIC", "Homeopathic"
+    HOMEOPATHY = "HOMEOPATHY", "Homeopathy"
     AYURVEDIC = "AYURVEDIC", "Ayurvedic"
     DENTAL = "DENTAL", "Dental"
     VETERINARY = "VETERINARY", "Veterinary"

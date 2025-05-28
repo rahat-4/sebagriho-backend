@@ -177,3 +177,23 @@ class SetPasswordSerializer(serializers.Serializer):
         session.delete()
 
         return user
+
+
+class MeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "uid",
+            "first_name",
+            "last_name",
+            "phone",
+            "email",
+            "gender",
+            "nid",
+            "nid_front",
+            "nid_back",
+            "avatar",
+            "blood_group",
+            "date_of_birth",
+            "is_admin",
+        ]

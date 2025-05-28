@@ -4,7 +4,12 @@ from ..views.authentications import (
     SetPassword,
     InitialRegistration,
     OtpVerification,
+    CookieTokenObtainPairView,
+    CookieTokenRefreshView,
+    LogoutView,
+    MeView,
 )
+
 
 urlpatterns = [
     path("/set-password", SetPassword.as_view(), name="public.set-password"),
@@ -18,4 +23,8 @@ urlpatterns = [
         InitialRegistration.as_view(),
         name="public.initial-registration",
     ),
+    path("/token/refresh", CookieTokenRefreshView.as_view(), name="token-refresh"),
+    path("/logout", LogoutView.as_view(), name="ogout"),
+    path("/login", CookieTokenObtainPairView.as_view(), name="token-obtain-pair"),
+    path("/me", MeView.as_view(), name="me"),
 ]
