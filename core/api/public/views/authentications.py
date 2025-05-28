@@ -1,4 +1,6 @@
-from django.shortcuts import get_object_or_404
+import random
+import string
+
 from django.contrib.auth import get_user_model
 
 from rest_framework.generics import CreateAPIView
@@ -12,6 +14,10 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+
+from apps.authentication.models import RegistrationSession
+
+from common.utils import unique_number_generator
 
 from ..serializers.authentications import (
     InitialRegistrationSerializer,
@@ -36,7 +42,6 @@ class InitialRegistration(APIView):
                 {
                     "message": "Registration information saved. OTP sent to your phone.",
                     "session_id": session.uid,
-                    "otp": session.otp,  # Remove this in production
                 },
                 status=status.HTTP_201_CREATED,
             )
@@ -79,6 +84,32 @@ class SetPassword(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ForgotPassword(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        phone = request.data.get("phone")
+        user = User.objects.filter(phone=phone).first()
+
+        if user:
+            # Generate OTP
+            otp = "".join(random.choices(string.digits, k=6))
+            initial_registration = RegistrationSession.objects.create(
+                phone=phone, otp=otp
+            )
+
+            response = {
+                "message": "OTP sent to your phone.",
+                "session_id": initial_registration.uid,
+            }
+            http_status = status.HTTP_200_OK
+        else:
+            response = {"message": "User not found."}
+            http_status = status.HTTP_404_NOT_FOUND
+
+        return Response(response, status=http_status)
+
+
 class CookieTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         phone = request.data.get("phone")
@@ -110,11 +141,20 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                 access_max_age = 60 * 60 * 24  # 24 hours
                 refresh_max_age = 60 * 60 * 24 * 7  # 7 days
 
+                response.set_cookie(
+                    key="remember_me",
+                    value="true",
+                    max_age=refresh_max_age,
+                    httponly=False,  # Needs to be readable by JS to conditionally refresh or logout
+                    secure=False,
+                    samesite="None",
+                )
+
             response.set_cookie(
                 key="access_token",
                 value=access,
                 httponly=True,
-                secure=False,
+                secure=True,  # Secure must be True if samsite=None
                 samesite="None",
                 max_age=access_max_age,
             )
@@ -122,7 +162,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                 key="refresh_token",
                 value=refresh,
                 httponly=True,
-                secure=False,
+                secure=True,
                 samesite="None",
                 max_age=refresh_max_age,
             )
@@ -137,6 +177,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 class CookieTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
+        remember_me = request.COOKIES.get("remember_me") == "true"
         if not refresh_token:
             return Response(
                 {"detail": "Refresh token not found."},
@@ -152,13 +193,10 @@ class CookieTokenRefreshView(TokenRefreshView):
         if response.status_code == status.HTTP_200_OK:
             access = response.data.get("access")
             refresh = response.data.get("refresh")
-            # Check remember me option
-            remember_me = request.data.get("rememberMe")
 
             access_max_age = 60 * 15  # 15 minutes
             refresh_max_age = 60 * 60 * 24  # 1 day
 
-            # TODO: This didn't work.
             if remember_me == "true":
                 access_max_age = 60 * 60 * 24 * 24
                 refresh_max_age = 60 * 60 * 24 * 7
@@ -203,6 +241,7 @@ class LogoutView(APIView):
         response = Response({"message": "Logged out."}, status=status.HTTP_200_OK)
         response.delete_cookie("refresh_token")
         response.delete_cookie("access_token")
+        response.delete_cookie("remember_me")
 
         return response
 

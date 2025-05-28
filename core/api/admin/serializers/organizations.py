@@ -160,4 +160,6 @@ class OrganizationMemberSerializer(serializers.ModelSerializer):
                 organization=organization,
                 **validated_data,
             )
+
+            RegistrationSession.objects.filter(uid=session_id).delete()
             return organization_member

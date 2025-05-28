@@ -1,6 +1,7 @@
 from django.urls import path
 
 from ..views.authentications import (
+    ForgotPassword,
     SetPassword,
     InitialRegistration,
     OtpVerification,
@@ -12,6 +13,7 @@ from ..views.authentications import (
 
 
 urlpatterns = [
+    path("/forgot-password", ForgotPassword.as_view(), name="public.forget-password"),
     path("/set-password", SetPassword.as_view(), name="public.set-password"),
     path(
         "/otp-verification",
