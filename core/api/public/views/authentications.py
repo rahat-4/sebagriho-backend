@@ -22,7 +22,8 @@ from apps.authentication.models import RegistrationSession
 from ..serializers.authentications import (
     InitialRegistrationSerializer,
     OtpVerificationSerializer,
-    SetPasswordSerializer,
+    ForgotPasswordSerializer,
+    ResetPasswordSerializer,
     MeSerializer,
 )
 
@@ -33,7 +34,7 @@ def is_development():
     return settings.DEBUG
 
 
-class InitialRegistration(APIView):
+class InitialRegistrationView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -52,7 +53,7 @@ class InitialRegistration(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class OtpVerification(APIView):
+class OtpVerificationView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -69,8 +70,8 @@ class OtpVerification(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SetPassword(CreateAPIView):
-    serializer_class = SetPasswordSerializer
+class ForgotPasswordView(CreateAPIView):
+    serializer_class = ForgotPasswordSerializer
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -88,7 +89,23 @@ class SetPassword(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ForgotPassword(APIView):
+class ResetPasswordView(APIView):
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response(
+                {
+                    "message": "Password reset successfully.",
+                    "uid": user.uid,
+                    "slug": user.slug,
+                },
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PhoneVerificationView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):

@@ -1,10 +1,11 @@
 from django.urls import path
 
 from ..views.authentications import (
-    ForgotPassword,
-    SetPassword,
-    InitialRegistration,
-    OtpVerification,
+    PhoneVerificationView,
+    ForgotPasswordView,
+    ResetPasswordView,
+    InitialRegistrationView,
+    OtpVerificationView,
     CookieTokenObtainPairView,
     CookieTokenRefreshView,
     LogoutView,
@@ -13,16 +14,23 @@ from ..views.authentications import (
 
 
 urlpatterns = [
-    path("/forgot-password", ForgotPassword.as_view(), name="public.forget-password"),
-    path("/set-password", SetPassword.as_view(), name="public.set-password"),
+    path(
+        "/phone-verification",
+        PhoneVerificationView.as_view(),
+        name="public.phone-verification",
+    ),
+    path(
+        "/forgot-password", ForgotPasswordView.as_view(), name="public.forgot-password"
+    ),
+    path("/reset-password", ResetPasswordView.as_view(), name="public.reset-password"),
     path(
         "/otp-verification",
-        OtpVerification.as_view(),
+        OtpVerificationView.as_view(),
         name="public.otp-verification",
     ),
     path(
         "/initial-registration",
-        InitialRegistration.as_view(),
+        InitialRegistrationView.as_view(),
         name="public.initial-registration",
     ),
     path("/token/refresh", CookieTokenRefreshView.as_view(), name="token-refresh"),
