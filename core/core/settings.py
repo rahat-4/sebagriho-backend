@@ -166,6 +166,7 @@ REST_FRAMEWORK = {
     ],
 }
 
+# JWT configuration
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
@@ -176,11 +177,34 @@ SIMPLE_JWT = {
 
 
 # CORS settings
-# Allow requests from Next.js frontend
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
-SESSION_COOKIE_SAMESITE = "Lax"  # CSRF protection
-SESSION_COOKIE_SECURE = False  # Set to True in production (HTTPS)
-CSRF_COOKIE_SECURE = False  # Set to True in production (HTTPS)
+
+# Additional CORS settings for development
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = False  # Keep false for security
+    CORS_ALLOWED_HEADERS = [
+        "accept",
+        "accept-encoding",
+        "authorization",
+        "content-type",
+        "dnt",
+        "origin",
+        "user-agent",
+        "x-csrftoken",
+        "x-requested-with",
+    ]
+
+# Cookie settings
+SESSION_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
+SESSION_COOKIE_SECURE = not DEBUG  # False in development and True in production
+CSRF_COOKIE_SECURE = not DEBUG  # False in development and True in production
+CSRF_COOKIE_SAMSITE = "Lax" if DEBUG else "None"
+
+# Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

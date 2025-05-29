@@ -130,7 +130,7 @@ class SetPasswordSerializer(serializers.Serializer):
     def validate(self, attrs):
         if attrs["password"] != attrs["confirm_password"]:
             raise serializers.ValidationError(
-                {"password": "Password fields didn't match."}
+                {"confirm_password": "Password fields didn't match."}
             )
 
         session_id = attrs.get("session_id")
@@ -159,27 +159,19 @@ class SetPasswordSerializer(serializers.Serializer):
         password = validated_data.get("password")
         session = self.session
 
-        # Create the actual user
-        user_data = {
-            "phone": session.phone,
-            "email": session.email,
-            "first_name": session.first_name,
-            "last_name": session.last_name,
-            "gender": session.gender,
-            "date_of_birth": session.date_of_birth,
-            "blood_group": session.blood_group,
-            "is_owner": session.is_owner,
-            "password": password,
-        }
-        user = User.objects.create_user(**user_data)
+        user = User.objects.get(phone=session.phone)
+        user.set_password(password)
+        user.save()
 
-        # Delete the registration session after successful user creation
+        # Delete the registration session
         session.delete()
 
         return user
 
 
 class MeSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -196,4 +188,9 @@ class MeSerializer(serializers.ModelSerializer):
             "blood_group",
             "date_of_birth",
             "is_admin",
+            "role",
         ]
+
+    def get_role(self, obj):
+        if obj.is_admin == True:
+            return "admin"

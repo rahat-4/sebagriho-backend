@@ -1,7 +1,9 @@
 import random
 import string
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
@@ -17,8 +19,6 @@ from rest_framework_simplejwt.views import (
 
 from apps.authentication.models import RegistrationSession
 
-from common.utils import unique_number_generator
-
 from ..serializers.authentications import (
     InitialRegistrationSerializer,
     OtpVerificationSerializer,
@@ -27,6 +27,10 @@ from ..serializers.authentications import (
 )
 
 User = get_user_model()
+
+
+def is_development():
+    return settings.DEBUG
 
 
 class InitialRegistration(APIView):
@@ -75,7 +79,7 @@ class SetPassword(CreateAPIView):
             user = serializer.save()
             return Response(
                 {
-                    "message": "User registered successfully.",
+                    "message": "Password set successfully.",
                     "uid": user.uid,
                     "slug": user.slug,
                 },
@@ -95,7 +99,7 @@ class ForgotPassword(APIView):
             # Generate OTP
             otp = "".join(random.choices(string.digits, k=6))
             initial_registration = RegistrationSession.objects.create(
-                phone=phone, otp=otp
+                phone=phone, otp=otp, otp_created_at=timezone.now()
             )
 
             response = {
@@ -137,34 +141,40 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             refresh_max_age = 60 * 60 * 24  # 1 day
 
             if remember_me:
-                print("Remember me is true")
                 access_max_age = 60 * 60 * 24  # 24 hours
                 refresh_max_age = 60 * 60 * 24 * 7  # 7 days
 
+            # Cookie settings based on environment
+            is_dev = is_development()
+            cookie_settings = {
+                "httponly": True,
+                "secure": not is_dev,  # False in development, True in production
+                "samesite": (
+                    "Lax" if is_dev else "None"
+                ),  # Lax in development, None in production
+            }
+
+            if remember_me:
                 response.set_cookie(
                     key="remember_me",
                     value="true",
                     max_age=refresh_max_age,
-                    httponly=False,  # Needs to be readable by JS to conditionally refresh or logout
-                    secure=False,
-                    samesite="None",
+                    httponly=False,  # Needs to be readable by JS
+                    secure=cookie_settings["secure"],
+                    samesite=cookie_settings["samesite"],
                 )
 
             response.set_cookie(
                 key="access_token",
                 value=access,
-                httponly=True,
-                secure=True,  # Secure must be True if samsite=None
-                samesite="None",
                 max_age=access_max_age,
+                **cookie_settings
             )
             response.set_cookie(
                 key="refresh_token",
                 value=refresh,
-                httponly=True,
-                secure=True,
-                samesite="None",
                 max_age=refresh_max_age,
+                **cookie_settings
             )
 
             response.data = {
@@ -198,24 +208,30 @@ class CookieTokenRefreshView(TokenRefreshView):
             refresh_max_age = 60 * 60 * 24  # 1 day
 
             if remember_me == "true":
-                access_max_age = 60 * 60 * 24 * 24
-                refresh_max_age = 60 * 60 * 24 * 7
+                access_max_age = 60 * 60 * 24  # 24 hours
+                refresh_max_age = 60 * 60 * 24 * 7  # 7 days
+
+            # Cookie settings based on environment
+            is_dev = is_development()
+            cookie_settings = {
+                "httponly": True,
+                "secure": not is_dev,  # False in development, True in production
+                "samesite": (
+                    "Lax" if is_dev else "None"
+                ),  # Lax in development, None in production
+            }
 
             response.set_cookie(
                 key="access_token",
                 value=access,
-                httponly=True,
-                secure=False,
-                samesite="None",
                 max_age=access_max_age,
+                **cookie_settings
             )
             response.set_cookie(
                 key="refresh_token",
                 value=refresh,
-                httponly=True,
-                secure=False,
-                samesite="None",
                 max_age=refresh_max_age,
+                **cookie_settings
             )
 
             response.data = {
@@ -239,9 +255,16 @@ class LogoutView(APIView):
 
         # Clear cookies
         response = Response({"message": "Logged out."}, status=status.HTTP_200_OK)
-        response.delete_cookie("refresh_token")
-        response.delete_cookie("access_token")
-        response.delete_cookie("remember_me")
+
+        # Delete cookies with the same settings they were set with
+        is_dev = is_development()
+        cookie_delete_settings = {
+            "secure": not is_dev,
+            "samesite": "Lax" if is_dev else "None",
+        }
+        response.delete_cookie("refresh_token", **cookie_delete_settings)
+        response.delete_cookie("access_token", **cookie_delete_settings)
+        response.delete_cookie("remember_me", **cookie_delete_settings)
 
         return response
 
