@@ -179,8 +179,8 @@ SIMPLE_JWT = {
 # CORS settings
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "https://localhost:3000",
+    # "http://localhost:3000",
 ]
 
 # Additional CORS settings for development
@@ -199,12 +199,14 @@ if DEBUG:
     ]
 
 # Cookie settings
-SESSION_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
+SESSION_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"
 SESSION_COOKIE_SECURE = not DEBUG  # False in development and True in production
 CSRF_COOKIE_SECURE = not DEBUG  # False in development and True in production
-CSRF_COOKIE_SAMSITE = "Lax" if DEBUG else "None"
+CSRF_COOKIE_SAMSITE = "None" if not DEBUG else "Lax"
 
-# Security settings for production
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+if DEBUG and "devtunnels.ms" in globals().get("DJANGO_ALLOWED_HOSTS", []):
+    # Settings for devtunnels
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMSITE = "None"
+    CSRF_COOKIE_SECURE = True

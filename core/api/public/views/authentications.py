@@ -34,6 +34,10 @@ def is_development():
     return settings.DEBUG
 
 
+def is_dev_tunnel():
+    return any("devtunnels.ms" in host for host in settings.ALLOWED_HOSTS)
+
+
 class InitialRegistrationView(APIView):
     permission_classes = [AllowAny]
 
@@ -163,11 +167,14 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
             # Cookie settings based on environment
             is_dev = is_development()
+            is_tunnel = is_dev_tunnel()
+
             cookie_settings = {
                 "httponly": True,
-                "secure": not is_dev,  # False in development, True in production
+                "secure": not is_dev
+                or is_tunnel,  # False in development, True in production
                 "samesite": (
-                    "Lax" if is_dev else "None"
+                    "Lax" if is_dev and not is_tunnel else "None"
                 ),  # Lax in development, None in production
             }
 
