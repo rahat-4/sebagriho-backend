@@ -176,36 +176,30 @@ SIMPLE_JWT = {
 }
 
 
-# CORS settings
+# # CORS settings
 CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-# Additional CORS settings for development
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = False  # Keep false for security
-    CORS_ALLOWED_HEADERS = [
-        "accept",
-        "accept-encoding",
-        "authorization",
-        "content-type",
-        "dnt",
-        "origin",
-        "user-agent",
-        "x-csrftoken",
-        "x-requested-with",
-    ]
+# # Additional CORS settings for development
+# if DEBUG:
+#     CORS_ALLOW_ALL_ORIGINS = False  # Keep false for security
+#     CORS_ALLOWED_HEADERS = [
+#         "accept",
+#         "accept-encoding",
+#         "authorization",
+#         "content-type",
+#         "dnt",
+#         "origin",
+#         "user-agent",
+#         "x-csrftoken",
+#         "x-requested-with",
+#     ]
 
-# Cookie settings
-SESSION_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"
-SESSION_COOKIE_SECURE = not DEBUG  # False in development and True in production
-CSRF_COOKIE_SECURE = not DEBUG  # False in development and True in production
-CSRF_COOKIE_SAMSITE = "None" if not DEBUG else "Lax"
-
-if DEBUG and "devtunnels.ms" in globals().get("DJANGO_ALLOWED_HOSTS", []):
-    # Settings for devtunnels
-    SESSION_COOKIE_SAMESITE = "None"
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SAMSITE = "None"
-    CSRF_COOKIE_SECURE = True
+# # Cookie settings
+# SESSION_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"
+# SESSION_COOKIE_SECURE = not DEBUG  # False in development and True in production
+# CSRF_COOKIE_SECURE = not DEBUG  # False in development and True in production
+# CSRF_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"

@@ -272,35 +272,18 @@ class LogoutView(APIView):
                 token = RefreshToken(refresh_token)
                 token.blacklist()
         except TokenError:
-            # Specific exception for token-related errors
             pass
         except Exception as e:
-            # Log other exceptions for debugging
             logger.warning(f"Error during logout token blacklisting: {e}")
 
-        # Clear cookies
         response = Response({"message": "Logged out."}, status=status.HTTP_200_OK)
 
-        # Delete cookies with the same settings they were set with
-        is_dev = is_development()
-        cookie_delete_settings = {
-            "secure": not is_dev,
-            "samesite": "Lax" if is_dev else "None",
-        }
+        # Delete cookies — only path/domain can be specified
+        response.delete_cookie("refresh_token", path="/")
+        response.delete_cookie("access_token", path="/")
 
-        response.delete_cookie("refresh_token", **cookie_delete_settings)
-        response.delete_cookie("access_token", **cookie_delete_settings)
-
-        # Only delete remember_me if it exists
-        remember_me = request.COOKIES.get("remember_me")
-        if remember_me:
-            # Use the same settings as when it was created (httponly=False)
-            response.delete_cookie(
-                "remember_me",
-                secure=cookie_delete_settings["secure"],
-                samesite=cookie_delete_settings["samesite"],
-                # Note: httponly parameter not needed for delete_cookie
-            )
+        if request.COOKIES.get("remember_me"):
+            response.delete_cookie("remember_me", path="/")
 
         return response
 
