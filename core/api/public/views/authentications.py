@@ -1,5 +1,6 @@
 import random
 import string
+import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -29,13 +30,11 @@ from ..serializers.authentications import (
 
 User = get_user_model()
 
+logger = logging.getLogger(__name__)
+
 
 def is_development():
     return settings.DEBUG
-
-
-def is_dev_tunnel():
-    return any("devtunnels.ms" in host for host in settings.ALLOWED_HOSTS)
 
 
 class InitialRegistrationView(APIView):
@@ -167,14 +166,12 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
             # Cookie settings based on environment
             is_dev = is_development()
-            is_tunnel = is_dev_tunnel()
 
             cookie_settings = {
                 "httponly": True,
-                "secure": not is_dev
-                or is_tunnel,  # False in development, True in production
+                "secure": not is_dev,  # False in development, True in production
                 "samesite": (
-                    "Lax" if is_dev and not is_tunnel else "None"
+                    "Lax" if is_dev else "None"
                 ),  # Lax in development, None in production
             }
 
@@ -192,13 +189,13 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                 key="access_token",
                 value=access,
                 max_age=access_max_age,
-                **cookie_settings
+                **cookie_settings,
             )
             response.set_cookie(
                 key="refresh_token",
                 value=refresh,
                 max_age=refresh_max_age,
-                **cookie_settings
+                **cookie_settings,
             )
 
             response.data = {
@@ -212,6 +209,7 @@ class CookieTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
         remember_me = request.COOKIES.get("remember_me") == "true"
+
         if not refresh_token:
             return Response(
                 {"detail": "Refresh token not found."},
@@ -231,7 +229,7 @@ class CookieTokenRefreshView(TokenRefreshView):
             access_max_age = 60 * 15  # 15 minutes
             refresh_max_age = 60 * 60 * 24  # 1 day
 
-            if remember_me == "true":
+            if remember_me:
                 access_max_age = 60 * 60 * 24  # 24 hours
                 refresh_max_age = 60 * 60 * 24 * 7  # 7 days
 
@@ -249,13 +247,13 @@ class CookieTokenRefreshView(TokenRefreshView):
                 key="access_token",
                 value=access,
                 max_age=access_max_age,
-                **cookie_settings
+                **cookie_settings,
             )
             response.set_cookie(
                 key="refresh_token",
                 value=refresh,
                 max_age=refresh_max_age,
-                **cookie_settings
+                **cookie_settings,
             )
 
             response.data = {
@@ -266,7 +264,6 @@ class CookieTokenRefreshView(TokenRefreshView):
 
 
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
@@ -274,8 +271,12 @@ class LogoutView(APIView):
             if refresh_token:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
-        except Exception as e:
+        except TokenError:
+            # Specific exception for token-related errors
             pass
+        except Exception as e:
+            # Log other exceptions for debugging
+            logger.warning(f"Error during logout token blacklisting: {e}")
 
         # Clear cookies
         response = Response({"message": "Logged out."}, status=status.HTTP_200_OK)
@@ -286,14 +287,26 @@ class LogoutView(APIView):
             "secure": not is_dev,
             "samesite": "Lax" if is_dev else "None",
         }
+
         response.delete_cookie("refresh_token", **cookie_delete_settings)
         response.delete_cookie("access_token", **cookie_delete_settings)
-        response.delete_cookie("remember_me", **cookie_delete_settings)
+
+        # Only delete remember_me if it exists
+        remember_me = request.COOKIES.get("remember_me")
+        if remember_me:
+            # Use the same settings as when it was created (httponly=False)
+            response.delete_cookie(
+                "remember_me",
+                secure=cookie_delete_settings["secure"],
+                samesite=cookie_delete_settings["samesite"],
+                # Note: httponly parameter not needed for delete_cookie
+            )
 
         return response
 
 
 class MeView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = MeSerializer(request.user)
