@@ -1,4 +1,8 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 
 from apps.authentication.choices import UserStatus
 from apps.homeopathy.models import (
@@ -8,7 +12,10 @@ from apps.homeopathy.models import (
 )
 from apps.homeopathy.choices import HomeopathicPatientStatus, MiasmType
 
+from apps.organizations.models import Organization, OrganizationMember
+
 from ..serializers.homeopathy import (
+    HomeopathicProfileDetailSerializer,
     HomeopathicPatientListSerializer,
     HomeopathicPatientDetailSerializer,
     HomeopathicAppointmentListSerializer,
@@ -16,6 +23,16 @@ from ..serializers.homeopathy import (
     HomeopathicMedicineListSerializer,
     HomeopathicMedicineDetailSerializer,
 )
+
+
+class HomeopathicProfileDetailView(RetrieveUpdateAPIView):
+    queryset = OrganizationMember.objects.all()
+    serializer_class = HomeopathicProfileDetailSerializer
+    permission_classes = []
+
+    def get_object(self):
+        uid = self.kwargs.get("organization_uid")
+        return self.queryset.get(organization__uid=uid)
 
 
 class HomeopathicPatientListView(ListCreateAPIView):

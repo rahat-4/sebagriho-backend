@@ -18,6 +18,7 @@ User = get_user_model()
 class Organization(BaseModelWithUid):
     slug = AutoSlugField(unique=True, populate_from=get_organization_slug)
     name = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, blank=True, null=True)
     logo = models.ImageField(
         upload_to=get_organization_media_path_prefix, blank=True, null=True
     )

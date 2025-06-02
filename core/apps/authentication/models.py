@@ -11,6 +11,7 @@ from autoslug import AutoSlugField
 
 from phonenumber_field.modelfields import PhoneNumberField
 
+
 from .choices import BloodGroups, UserGender, UserStatus
 from .managers import UserManager
 from .utils import get_user_media_path_prefix, get_user_slug
@@ -96,6 +97,9 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
         Return the most descriptive name available.
         """
         return self.get_full_name() if self.get_full_name() else str(self.phone)
+
+    def get_organization(self):
+        return self.organization_members.get().organization
 
 
 class RegistrationSession(BaseModelWithUid):

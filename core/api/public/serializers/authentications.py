@@ -1,16 +1,47 @@
 from django.contrib.auth import authenticate, get_user_model
 from django.utils import timezone
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from rest_framework import serializers
 
 from apps.authentication.models import RegistrationSession
-
+from apps.organizations.models import Organization, OrganizationMember
 import random
 import string
 from rest_framework_simplejwt.tokens import RefreshToken
 from phonenumber_field.serializerfields import PhoneNumberField
 
+
+from common.serializers import OrganizationSlimSerializer
+
 User = get_user_model()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        print("===============", user.get_full_name())
+
+        # Add custom claims
+        token["user_uid"] = str(user.uid)
+        token["name"] = user.get_full_name()
+        token["phone"] = str(user.phone)
+        token["avatar"] = user.avatar.url if user.avatar else None
+        token["is_admin"] = user.is_admin
+        token["is_owner"] = user.is_owner
+        if user.is_owner:
+            organization = user.get_organization()
+            token["organization_uid"] = str(organization.uid)
+            token["organization_name"] = organization.name
+            token["organization_title"] = organization.title
+            token["organization_logo"] = (
+                organization.logo.url if organization.logo else None
+            )
+
+        return token
 
 
 class InitialRegistrationSerializer(serializers.ModelSerializer):
@@ -198,7 +229,7 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 class MeSerializer(serializers.ModelSerializer):
-    role = serializers.SerializerMethodField()
+    organization = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -216,9 +247,18 @@ class MeSerializer(serializers.ModelSerializer):
             "blood_group",
             "date_of_birth",
             "is_admin",
-            "role",
+            "is_owner",
+            "organization",
         ]
 
     def get_role(self, obj):
         if obj.is_admin == True:
             return "admin"
+
+    def get_organization(self, obj):
+        print(obj)
+        if obj.is_owner == True:
+            organization = OrganizationMember.objects.get(user=obj).organization
+            return OrganizationSlimSerializer(organization).data
+        else:
+            return None

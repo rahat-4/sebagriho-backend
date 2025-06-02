@@ -1,6 +1,7 @@
 from django.urls import path
 
 from ..views.homeopathy import (
+    HomeopathicProfileDetailView,
     HomeopathicPatientListView,
     HomeopathicPatientDetailView,
     HomeopathicAppointmentListView,
@@ -19,5 +20,10 @@ urlpatterns = [
         "/patients",
         HomeopathicPatientListView.as_view(),
         name="homeopathic.patient-list",
+    ),
+    path(
+        "/profile/<uuid:organization_uid>",
+        HomeopathicProfileDetailView.as_view(),
+        name="homeopathic.profile-detail",
     ),
 ]

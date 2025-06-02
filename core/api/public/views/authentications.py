@@ -21,6 +21,7 @@ from rest_framework_simplejwt.views import (
 from apps.authentication.models import RegistrationSession
 
 from ..serializers.authentications import (
+    CustomTokenObtainPairSerializer,
     InitialRegistrationSerializer,
     OtpVerificationSerializer,
     ForgotPasswordSerializer,
@@ -135,6 +136,8 @@ class PhoneVerificationView(APIView):
 
 
 class CookieTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
     def post(self, request, *args, **kwargs):
         phone = request.data.get("phone")
         password = request.data.get("password")
@@ -206,6 +209,8 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
 
 class CookieTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenObtainPairSerializer
+
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
         remember_me = request.COOKIES.get("remember_me") == "true"

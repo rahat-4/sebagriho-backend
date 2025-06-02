@@ -12,6 +12,8 @@ from apps.doctors.models import (
     LanguageSpoken,
 )
 
+from apps.organizations.models import Organization, OrganizationMember
+
 User = get_user_model()
 
 
@@ -31,6 +33,11 @@ class UserSlimSerializer(serializers.ModelSerializer):
             "avatar",
             "blood_group",
             "date_of_birth",
+            "is_active",
+            "is_staff",
+            "is_superuser",
+            "is_admin",
+            "is_owner",
         ]
 
 
@@ -79,3 +86,26 @@ class DoctorSlimSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = ["user", "about", "department", "experience"]
+
+
+class OrganizationSlimSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = [
+            "uid",
+            "slug",
+            "name",
+            "title",
+            "logo",
+            "subdomain",
+            "organization_type",
+            "status",
+            "address",
+            "status",
+            "organization_type",
+            "phone",
+            "email",
+            "website",
+            "facebook",
+            "description",
+        ]
