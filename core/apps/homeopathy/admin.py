@@ -8,7 +8,7 @@ admin.site.register(HomeopathicPatient)
 
 @admin.register(HomeopathicAppointment)
 class HomeopathicAppointmentAdmin(admin.ModelAdmin):
-    list_display = ("homeopathic_patient", "created_at")
+    list_display = ("uid", "homeopathic_patient", "created_at")
     search_fields = ("homeopathic_patient__name", "created_at")
     list_per_page = 20
     ordering = ("-created_at",)

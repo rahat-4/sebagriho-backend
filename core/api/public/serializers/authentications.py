@@ -23,23 +23,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
-        print("===============", user.get_full_name())
-
         # Add custom claims
         token["user_uid"] = str(user.uid)
-        token["name"] = user.get_full_name()
-        token["phone"] = str(user.phone)
-        token["avatar"] = user.avatar.url if user.avatar else None
         token["is_admin"] = user.is_admin
         token["is_owner"] = user.is_owner
         if user.is_owner:
-            organization = user.get_organization()
-            token["organization_uid"] = str(organization.uid)
-            token["organization_name"] = organization.name
-            token["organization_title"] = organization.title
-            token["organization_logo"] = (
-                organization.logo.url if organization.logo else None
-            )
+            token["organization_uid"] = str(user.get_organization().uid)
 
         return token
 
@@ -110,6 +99,7 @@ class InitialRegistrationSerializer(serializers.ModelSerializer):
         session.otp = otp
         session.otp_created_at = timezone.now()
         session.is_verified = False
+        session.is_owner = True
         session.save()
 
         # In a real application, send the OTP via SMS here
@@ -230,13 +220,13 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 class MeSerializer(serializers.ModelSerializer):
     organization = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             "uid",
-            "first_name",
-            "last_name",
+            "name",
             "phone",
             "email",
             "gender",
@@ -251,14 +241,25 @@ class MeSerializer(serializers.ModelSerializer):
             "organization",
         ]
 
-    def get_role(self, obj):
-        if obj.is_admin == True:
-            return "admin"
+    def get_name(self, obj):
+        return obj.get_full_name()
 
     def get_organization(self, obj):
-        print(obj)
-        if obj.is_owner == True:
+        if obj.is_owner:
             organization = OrganizationMember.objects.get(user=obj).organization
-            return OrganizationSlimSerializer(organization).data
-        else:
-            return None
+            return OrganizationSlimSerializer(organization, context=self.context).data
+        return None
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+
+        def make_absolute(uri):
+            return request.build_absolute_uri(uri) if uri and request else uri
+
+        # Convert relative URLs to absolute
+        representation["avatar"] = make_absolute(representation.get("avatar"))
+        representation["nid_front"] = make_absolute(representation.get("nid_front"))
+        representation["nid_back"] = make_absolute(representation.get("nid_back"))
+
+        return representation

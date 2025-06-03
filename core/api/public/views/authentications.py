@@ -294,8 +294,6 @@ class LogoutView(APIView):
 
 
 class MeView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request):
-        serializer = MeSerializer(request.user)
+        serializer = MeSerializer(request.user, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)

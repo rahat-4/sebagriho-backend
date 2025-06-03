@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.conf import settings
 
 from rest_framework import serializers
 
@@ -109,3 +110,12 @@ class OrganizationSlimSerializer(serializers.ModelSerializer):
             "facebook",
             "description",
         ]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get("request")
+
+        if request and representation.get("logo"):
+            representation["logo"] = request.build_absolute_uri(representation["logo"])
+
+        return representation

@@ -12,12 +12,12 @@ from ..views.homeopathy import (
 
 urlpatterns = [
     path(
-        "/patients/<uuid:patient_uid>",
+        "/<uuid:organization_uid>/patients/<uuid:patient_uid>",
         HomeopathicPatientDetailView.as_view(),
         name="homeopathic.patient-detail",
     ),
     path(
-        "/patients",
+        "/<uuid:organization_uid>/patients",
         HomeopathicPatientListView.as_view(),
         name="homeopathic.patient-list",
     ),

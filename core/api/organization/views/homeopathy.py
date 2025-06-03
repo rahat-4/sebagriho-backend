@@ -31,14 +31,19 @@ class HomeopathicProfileDetailView(RetrieveUpdateAPIView):
     permission_classes = []
 
     def get_object(self):
-        uid = self.kwargs.get("organization_uid")
-        return self.queryset.get(organization__uid=uid)
+        organization_uid = self.kwargs.get("organization_uid")
+        return self.queryset.get(organization__uid=organization_uid)
 
 
 class HomeopathicPatientListView(ListCreateAPIView):
     queryset = HomeopathicPatient.objects.all()
     serializer_class = HomeopathicPatientListSerializer
     permission_classes = []
+
+    def get_queryset(self):
+        organization_uid = self.kwargs.get("organization_uid")
+
+        return self.queryset.filter(organization__uid=organization_uid)
 
 
 class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
@@ -47,8 +52,9 @@ class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = []
 
     def get_object(self):
+        organization_uid = self.kwargs.get("organization_uid")
         patient_uid = self.kwargs.get("patient_uid")
-        return self.queryset.get(uid=patient_uid)
+        return self.queryset.get(uid=patient_uid, organization__uid=organization_uid)
 
     def perform_destroy(self, instance):
         instance.user.status = UserStatus.DELETED
