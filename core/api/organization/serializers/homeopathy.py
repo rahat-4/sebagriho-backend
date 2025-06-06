@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from apps.homeopathy.models import (
     HomeopathicPatient,
@@ -28,6 +29,7 @@ class HomeopathicProfileDetailSerializer(serializers.ModelSerializer):
 class HomeopathicPatientListSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name")
     last_name = serializers.CharField(source="user.last_name", allow_blank=True)
+    name = serializers.SerializerMethodField()
     phone = serializers.CharField(source="user.phone")
     avatar = serializers.ImageField(
         source="user.avatar", allow_null=True, required=False
@@ -41,6 +43,7 @@ class HomeopathicPatientListSerializer(serializers.ModelSerializer):
         fields = [
             "uid",
             "avatar",
+            "name",
             "first_name",
             "last_name",
             "phone",
@@ -59,6 +62,9 @@ class HomeopathicPatientListSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def get_name(self, obj):
+        return obj.user.get_full_name()
+
     def validate_phone(self, value):
         user = User.objects.filter(phone=value).exists()
         if user:
@@ -70,6 +76,7 @@ class HomeopathicPatientListSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         with transaction.atomic():
+            organization_uid = self.context["view"].kwargs.get("organization_uid")
             user = validated_data.pop("user")
 
             user_data = {
@@ -78,8 +85,15 @@ class HomeopathicPatientListSerializer(serializers.ModelSerializer):
                 "phone": user["phone"],
                 "avatar": user.get("avatar"),
             }
+            organization = Organization.objects.filter(uid=organization_uid).first()
+
+            if not organization:
+                raise ValidationError("Organization not found!")
+
             user = User.objects.create_user(**user_data)
-            patient = HomeopathicPatient.objects.create(user=user, **validated_data)
+            patient = HomeopathicPatient.objects.create(
+                user=user, organization=organization, **validated_data
+            )
 
             return patient
 
