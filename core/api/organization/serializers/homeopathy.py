@@ -207,11 +207,21 @@ class HomeopathicMedicineListSerializer(serializers.ModelSerializer):
             "unit_price",
             "description",
             "batch_number",
-            "homeopathic_patient",
-            "organization",
+            # "homeopathic_patient",
+            # "organization",
             "created_at",
             "updated_at",
         ]
+
+    def create(self, validated_data):
+        organization_uid = self.context["view"].kwargs.get("organization_uid")
+        organization = Organization.objects.filter(uid=organization_uid).first()
+
+        medicine = HomeopathicMedicine.objects.create(
+            organization=organization, **validated_data
+        )
+
+        return medicine
 
 
 class HomeopathicMedicineDetailSerializer(serializers.ModelSerializer):

@@ -12,7 +12,11 @@ from common.models import BaseModelWithUid
 from common.utils import unique_number_generator
 
 from .choices import HomeopathicPatientStatus, MiasmType
-from .utils import get_homeopathic_patient_slug, get_homeopathic_appointment_slug
+from .utils import (
+    get_homeopathic_patient_slug,
+    get_homeopathic_appointment_slug,
+    get_medicine_media_path_prefix,
+)
 
 
 User = get_user_model()
@@ -70,6 +74,12 @@ class HomeopathicAppointment(BaseModelWithUid):
 
 
 class HomeopathicMedicine(BaseModelWithUid):
+    avatar = models.ImageField(
+        upload_to=get_medicine_media_path_prefix,
+        blank=True,
+        null=True,
+        help_text="Image of the medicine",
+    )
     name = models.CharField(max_length=100)
     power = models.CharField(max_length=100, blank=True, null=True)
     expiration_date = models.DateField(blank=True, null=True)
@@ -95,7 +105,7 @@ class HomeopathicMedicine(BaseModelWithUid):
     )
 
     def __str__(self):
-        return f"{self.organization.name} - {self.homeopathic_patient.serial_number}"
+        return f"{self.organization.name}"
 
 
 @receiver(pre_save, sender=HomeopathicPatient)
