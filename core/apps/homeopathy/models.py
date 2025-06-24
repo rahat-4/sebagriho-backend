@@ -16,6 +16,8 @@ from .utils import (
     get_homeopathic_patient_slug,
     get_homeopathic_appointment_slug,
     get_medicine_media_path_prefix,
+    get_appointment_file_path,
+    get_patient_file_path,
 )
 
 
@@ -39,6 +41,12 @@ class HomeopathicPatient(BaseModelWithUid):
     )
     case_history = models.TextField(blank=True, null=True)
     habits = models.TextField(blank=True, null=True)
+    patient_file = models.FileField(
+        upload_to=get_patient_file_path,
+        blank=True,
+        null=True,
+        help_text="Upload any relevant file for the patient",
+    )
 
     # FK
     user = models.ForeignKey(
@@ -58,10 +66,23 @@ class HomeopathicAppointment(BaseModelWithUid):
     slug = AutoSlugField(unique=True, populate_from=get_homeopathic_appointment_slug)
     symptoms = models.TextField(blank=True, null=True)
     treatment_effectiveness = models.TextField(blank=True, null=True)
+    appointment_file = models.FileField(
+        upload_to=get_appointment_file_path,
+        blank=True,
+        null=True,
+        help_text="Upload any relevant file for the appointment",
+    )
     homeopathic_patient = models.ForeignKey(
         HomeopathicPatient,
         on_delete=models.CASCADE,
         related_name="homeopathic_patient_appointments",
+    )
+    medicine = models.ForeignKey(
+        "HomeopathicMedicine",
+        on_delete=models.SET_NULL,
+        related_name="homeopathic_appointment_medicines",
+        blank=True,
+        null=True,
     )
     organization = models.ForeignKey(
         Organization,
@@ -91,13 +112,6 @@ class HomeopathicMedicine(BaseModelWithUid):
     )
     description = models.TextField(null=True, blank=True)
     batch_number = models.CharField(max_length=100, null=True, blank=True)
-    homeopathic_patient = models.ForeignKey(
-        HomeopathicPatient,
-        on_delete=models.SET_NULL,
-        related_name="homeopathic_patient_medicines",
-        blank=True,
-        null=True,
-    )
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,

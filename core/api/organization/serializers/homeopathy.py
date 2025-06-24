@@ -99,6 +99,8 @@ class HomeopathicPatientListSerializer(serializers.ModelSerializer):
 
 
 class HomeopathicPatientDetailSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
     first_name = serializers.CharField(
         source="user.first_name", allow_blank=True, required=False
     )
@@ -112,17 +114,22 @@ class HomeopathicPatientDetailSerializer(serializers.ModelSerializer):
     gender = serializers.CharField(
         source="user.gender", allow_blank=True, required=False
     )
+    blood_group = serializers.CharField(
+        source="user.blood_group", allow_blank=True, required=False
+    )
 
     class Meta:
         model = HomeopathicPatient
         fields = [
             "uid",
             "avatar",
+            "name",
             "first_name",
             "last_name",
             "phone",
             "age",
             "gender",
+            "blood_group",
             "serial_number",
             "old_serial_number",
             "relative_phone",
@@ -135,6 +142,9 @@ class HomeopathicPatientDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def get_name(self, obj):
+        return obj.user.get_full_name()
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", None)

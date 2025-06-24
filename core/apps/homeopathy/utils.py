@@ -8,3 +8,11 @@ def get_homeopathic_appointment_slug(instance):
 
 def get_medicine_media_path_prefix(instance, filename):
     return f"medicines/{instance.organization.uid}/{filename}"
+
+
+def get_appointment_file_path(instance, filename):
+    return f"appointments/{instance.organization.uid}/{filename}"
+
+
+def get_patient_file_path(instance, filename):
+    return f"patients/{instance.organization.uid}/{filename}"

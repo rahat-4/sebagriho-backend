@@ -17,3 +17,9 @@ Organization
 Bug:
 1. Admin, Organization can't add as a patient
 2. Permission didn't add on homeopathic api's
+
+
+Patient List:
+1. Search: [Name, Phone, Serial number, Old serial number]
+2. Filtering: [Miasm, Blood group, Gender]
+3. Sorting: [Name, Last visit]
