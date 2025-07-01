@@ -20,3 +20,8 @@ class MiasmType(models.TextChoices):
     LEPROSY = "LEPROSY", "Leprosy"
     SYPHILITIC = "SYPHILITIC", "Syphilitic"
     AIDS = "AIDS", "AIDS"
+
+
+class HomeopathicMedicineStatus(models.TextChoices):
+    AVAILABLE = "AVAILABLE", "Available"
+    DELETED = "DELETED", "Deleted"

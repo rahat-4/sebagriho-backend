@@ -3,7 +3,7 @@ def get_homeopathic_patient_slug(instance) -> str:
 
 
 def get_homeopathic_appointment_slug(instance):
-    return f"{instance.patient.user.get_full_name()}-{instance.organization.name}-{instance.serial_number}"
+    return f"{instance.homeopathic_patient.user.get_full_name()}-{instance.organization.name}-{instance.homeopathic_patient.serial_number}"
 
 
 def get_medicine_media_path_prefix(instance, filename):

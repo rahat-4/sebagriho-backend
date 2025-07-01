@@ -11,7 +11,7 @@ from apps.organizations.models import Organization
 from common.models import BaseModelWithUid
 from common.utils import unique_number_generator
 
-from .choices import HomeopathicPatientStatus, MiasmType
+from .choices import HomeopathicPatientStatus, MiasmType, HomeopathicMedicineStatus
 from .utils import (
     get_homeopathic_patient_slug,
     get_homeopathic_appointment_slug,
@@ -77,12 +77,11 @@ class HomeopathicAppointment(BaseModelWithUid):
         on_delete=models.CASCADE,
         related_name="homeopathic_patient_appointments",
     )
-    medicine = models.ForeignKey(
+    medicines = models.ManyToManyField(
         "HomeopathicMedicine",
-        on_delete=models.SET_NULL,
-        related_name="homeopathic_appointment_medicines",
+        related_name="homeopathic_appointments_medicines",
         blank=True,
-        null=True,
+        help_text="Medicines prescribed during the appointment",
     )
     organization = models.ForeignKey(
         Organization,
@@ -112,6 +111,11 @@ class HomeopathicMedicine(BaseModelWithUid):
     )
     description = models.TextField(null=True, blank=True)
     batch_number = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=HomeopathicMedicineStatus.choices,
+        default=HomeopathicMedicineStatus.AVAILABLE,
+    )
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,

@@ -4,7 +4,7 @@ from rest_framework.exceptions import ValidationError
 from apps.organizations.models import Organization, OrganizationMember
 from apps.organizations.choices import OrganizationStatus
 
-from common.permission.admin_permission import IsAdmin
+from common.permissions import IsAdmin
 
 from ..serializers.organizations import (
     OrganizationListSerializers,

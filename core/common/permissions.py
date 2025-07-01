@@ -13,3 +13,13 @@ class IsAdmin(BasePermission):
             and request.user.is_authenticated
             and (request.user.is_superuser or request.user.is_admin)
         )
+
+
+class IsOrganizationMember(BasePermission):
+    """
+    Custom permission to only allow organization members to access certain views.
+    """
+
+    def has_permission(self, request, view):
+        # Check if the user is authenticated and is an admin
+        return request.user and request.user.is_authenticated and request.user.is_owner

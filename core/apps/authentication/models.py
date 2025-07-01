@@ -42,6 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
     )
     gender = models.CharField(
         max_length=20,
+        null=True,
         blank=True,
         choices=UserGender.choices,
         default=UserGender.MALE,

@@ -37,6 +37,9 @@ class HomeopathicPatientListSerializer(serializers.ModelSerializer):
     gender = serializers.CharField(
         source="user.gender", allow_blank=True, required=False
     )
+    blood_group = serializers.CharField(
+        source="user.blood_group", allow_blank=True, required=False
+    )
 
     class Meta:
         model = HomeopathicPatient
@@ -49,6 +52,7 @@ class HomeopathicPatientListSerializer(serializers.ModelSerializer):
             "phone",
             "age",
             "gender",
+            "blood_group",
             "serial_number",
             "old_serial_number",
             "relative_phone",
@@ -56,6 +60,7 @@ class HomeopathicPatientListSerializer(serializers.ModelSerializer):
             "miasm_type",
             "case_history",
             "habits",
+            "patient_file",
             "status",
             "slug",
             "created_at",
@@ -84,6 +89,8 @@ class HomeopathicPatientListSerializer(serializers.ModelSerializer):
                 "last_name": user.get("last_name", ""),
                 "phone": user["phone"],
                 "avatar": user.get("avatar"),
+                "gender": user.get("gender"),
+                "blood_group": user.get("blood_group"),
             }
             organization = Organization.objects.filter(uid=organization_uid).first()
 
@@ -173,7 +180,16 @@ class HomeopathicPatientDetailSerializer(serializers.ModelSerializer):
         return instance
 
 
-class HomeopathicAppointmentListSerializer(serializers.ModelSerializer):
+class HomeopathicPatientAppointmentListSerializer(serializers.ModelSerializer):
+    medicines = serializers.SlugRelatedField(
+        many=True,
+        queryset=HomeopathicMedicine.objects.all(),
+        slug_field="uid",
+        allow_empty=True,
+        allow_null=True,
+        required=False,
+    )
+
     class Meta:
         model = HomeopathicAppointment
         fields = [
@@ -181,11 +197,28 @@ class HomeopathicAppointmentListSerializer(serializers.ModelSerializer):
             "slug",
             "symptoms",
             "treatment_effectiveness",
-            "homeopathic_patient",
-            "organization",
+            "appointment_file",
+            "medicines",
             "created_at",
             "updated_at",
         ]
+
+    def create(self, validated_data):
+        medicines = validated_data.pop("medicines", [])
+
+        organization_uid = self.context["view"].kwargs.get("organization_uid")
+        patient_uid = self.context["view"].kwargs.get("patient_uid")
+
+        organization = Organization.objects.filter(uid=organization_uid).first()
+        patient = HomeopathicPatient.objects.filter(uid=patient_uid).first()
+
+        appointment = HomeopathicAppointment.objects.create(
+            organization=organization, homeopathic_patient=patient, **validated_data
+        )
+
+        appointment.medicines.add(*medicines)
+
+        return appointment
 
 
 class HomeopathicAppointmentDetailSerializer(serializers.ModelSerializer):
@@ -208,6 +241,7 @@ class HomeopathicMedicineListSerializer(serializers.ModelSerializer):
         model = HomeopathicMedicine
         fields = [
             "uid",
+            "avatar",
             "name",
             "power",
             "expiration_date",
@@ -217,11 +251,11 @@ class HomeopathicMedicineListSerializer(serializers.ModelSerializer):
             "unit_price",
             "description",
             "batch_number",
-            # "homeopathic_patient",
-            # "organization",
             "created_at",
             "updated_at",
         ]
+
+        read_only_fields = ["uid", "created_at", "updated_at"]
 
     def create(self, validated_data):
         organization_uid = self.context["view"].kwargs.get("organization_uid")
@@ -239,6 +273,7 @@ class HomeopathicMedicineDetailSerializer(serializers.ModelSerializer):
         model = HomeopathicMedicine
         fields = [
             "uid",
+            "avatar",
             "name",
             "power",
             "expiration_date",
@@ -248,8 +283,31 @@ class HomeopathicMedicineDetailSerializer(serializers.ModelSerializer):
             "unit_price",
             "description",
             "batch_number",
-            "homeopathic_patient",
-            "organization",
             "created_at",
             "updated_at",
         ]
+
+        read_only_fields = ["uid", "created_at", "updated_at"]
+
+    # def update(self, instance, validated_data):
+    #     instance.name = validated_data.get("name", instance.name)
+    #     instance.power = validated_data.get("power", instance.power)
+    #     instance.expiration_date = validated_data.get(
+    #         "expiration_date", instance.expiration_date
+    #     )
+    #     instance.is_available = validated_data.get(
+    #         "is_available", instance.is_available
+    #     )
+    #     instance.manufacturer = validated_data.get(
+    #         "manufacturer", instance.manufacturer
+    #     )
+    #     instance.total_quantity = validated_data.get(
+    #         "total_quantity", instance.total_quantity
+    #     )
+    #     instance.unit_price = validated_data.get("unit_price", instance.unit_price)
+    #     instance.description = validated_data.get("description", instance.description)
+    #     instance.batch_number = validated_data.get(
+    #         "batch_number", instance.batch_number
+    #     )
+    #     instance.save()
+    #     return instance
