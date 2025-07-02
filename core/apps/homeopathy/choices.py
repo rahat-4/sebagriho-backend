@@ -22,6 +22,11 @@ class MiasmType(models.TextChoices):
     AIDS = "AIDS", "AIDS"
 
 
+class HomeopathicAppointmentStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    DELETED = "DELETED", "Deleted"
+
+
 class HomeopathicMedicineStatus(models.TextChoices):
     AVAILABLE = "AVAILABLE", "Available"
     DELETED = "DELETED", "Deleted"

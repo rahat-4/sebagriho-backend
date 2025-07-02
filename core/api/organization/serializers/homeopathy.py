@@ -236,7 +236,7 @@ class HomeopathicAppointmentDetailSerializer(serializers.ModelSerializer):
         ]
 
 
-class HomeopathicMedicineListSerializer(serializers.ModelSerializer):
+class HomeopathicMedicineSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeopathicMedicine
         fields = [
@@ -256,58 +256,3 @@ class HomeopathicMedicineListSerializer(serializers.ModelSerializer):
         ]
 
         read_only_fields = ["uid", "created_at", "updated_at"]
-
-    def create(self, validated_data):
-        organization_uid = self.context["view"].kwargs.get("organization_uid")
-        organization = Organization.objects.filter(uid=organization_uid).first()
-
-        medicine = HomeopathicMedicine.objects.create(
-            organization=organization, **validated_data
-        )
-
-        return medicine
-
-
-class HomeopathicMedicineDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HomeopathicMedicine
-        fields = [
-            "uid",
-            "avatar",
-            "name",
-            "power",
-            "expiration_date",
-            "is_available",
-            "manufacturer",
-            "total_quantity",
-            "unit_price",
-            "description",
-            "batch_number",
-            "created_at",
-            "updated_at",
-        ]
-
-        read_only_fields = ["uid", "created_at", "updated_at"]
-
-    # def update(self, instance, validated_data):
-    #     instance.name = validated_data.get("name", instance.name)
-    #     instance.power = validated_data.get("power", instance.power)
-    #     instance.expiration_date = validated_data.get(
-    #         "expiration_date", instance.expiration_date
-    #     )
-    #     instance.is_available = validated_data.get(
-    #         "is_available", instance.is_available
-    #     )
-    #     instance.manufacturer = validated_data.get(
-    #         "manufacturer", instance.manufacturer
-    #     )
-    #     instance.total_quantity = validated_data.get(
-    #         "total_quantity", instance.total_quantity
-    #     )
-    #     instance.unit_price = validated_data.get("unit_price", instance.unit_price)
-    #     instance.description = validated_data.get("description", instance.description)
-    #     instance.batch_number = validated_data.get(
-    #         "batch_number", instance.batch_number
-    #     )
-    #     instance.save()
-    #     return instance

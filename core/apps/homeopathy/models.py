@@ -11,7 +11,12 @@ from apps.organizations.models import Organization
 from common.models import BaseModelWithUid
 from common.utils import unique_number_generator
 
-from .choices import HomeopathicPatientStatus, MiasmType, HomeopathicMedicineStatus
+from .choices import (
+    HomeopathicPatientStatus,
+    MiasmType,
+    HomeopathicAppointmentStatus,
+    HomeopathicMedicineStatus,
+)
 from .utils import (
     get_homeopathic_patient_slug,
     get_homeopathic_appointment_slug,
@@ -72,6 +77,11 @@ class HomeopathicAppointment(BaseModelWithUid):
         null=True,
         help_text="Upload any relevant file for the appointment",
     )
+    status = models.CharField(
+        max_length=20,
+        choices=HomeopathicAppointmentStatus.choices,
+        default=HomeopathicAppointmentStatus.ACTIVE,
+    )
     homeopathic_patient = models.ForeignKey(
         HomeopathicPatient,
         on_delete=models.CASCADE,
@@ -101,11 +111,11 @@ class HomeopathicMedicine(BaseModelWithUid):
         help_text="Image of the medicine",
     )
     name = models.CharField(max_length=100)
-    power = models.CharField(max_length=100, blank=True, null=True)
+    power = models.PositiveIntegerField(blank=True, null=True)
     expiration_date = models.DateField(blank=True, null=True)
     is_available = models.BooleanField(default=False)
     manufacturer = models.CharField(max_length=255, null=True, blank=True)
-    total_quantity = models.IntegerField(null=True, blank=True)
+    total_quantity = models.PositiveIntegerField(null=True, blank=True)
     unit_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )

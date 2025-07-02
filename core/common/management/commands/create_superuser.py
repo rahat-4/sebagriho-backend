@@ -8,7 +8,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         phone = "+8801521507316"
-        password = "admin"
+        password = "Test123pass"
 
         try:
             if User.objects.filter(phone=phone).exists():

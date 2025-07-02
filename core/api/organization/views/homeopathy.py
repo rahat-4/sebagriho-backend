@@ -3,7 +3,7 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-
+from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 from common.filters import HomeopathicMedicineFilter
@@ -16,7 +16,7 @@ from apps.homeopathy.models import (
 )
 from apps.homeopathy.choices import (
     HomeopathicPatientStatus,
-    MiasmType,
+    HomeopathicAppointmentStatus,
     HomeopathicMedicineStatus,
 )
 
@@ -30,8 +30,7 @@ from ..serializers.homeopathy import (
     HomeopathicPatientDetailSerializer,
     HomeopathicPatientAppointmentListSerializer,
     HomeopathicAppointmentDetailSerializer,
-    HomeopathicMedicineListSerializer,
-    HomeopathicMedicineDetailSerializer,
+    HomeopathicMedicineSerializer,
 )
 
 
@@ -45,6 +44,7 @@ class HomeopathicProfileDetailView(RetrieveUpdateAPIView):
         return self.queryset.get(organization__uid=organization_uid)
 
 
+# Homeopathic patient views
 class HomeopathicPatientListView(ListCreateAPIView):
     queryset = HomeopathicPatient.objects.all()
     serializer_class = HomeopathicPatientListSerializer
@@ -73,10 +73,18 @@ class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
         instance.save()
 
 
+# Homeopathic appointment views
 class HomeopathicPatientppointmentListView(ListCreateAPIView):
     queryset = HomeopathicAppointment.objects.all()
     serializer_class = HomeopathicPatientAppointmentListSerializer
     permission_classes = [IsOrganizationMember]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = [
+        "homeopathic_patient__user__first_name",
+        "homeopathic_patient__user__last_name",
+        "homeopathic_patient__serial_number",
+        "homeopathic_patient__old_serial_number",
+    ]
 
     def get_queryset(self):
         organization_uid = self.kwargs.get("organization_uid")
@@ -93,36 +101,61 @@ class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOrganizationMember]
 
     def get_object(self):
-        uid = self.kwargs.get("uid")
-        return self.queryset.get(uid=uid)
+        organization_uid = self.kwargs.get("organization_uid")
+        patient_uid = self.kwargs.get("patient_uid")
+        appointment_uid = self.kwargs.get("appointment_uid")
+
+        return self.queryset.get(
+            organization__uid=organization_uid,
+            homeopathic_patient__uid=patient_uid,
+            uid=appointment_uid,
+        )
 
     def perform_destroy(self, instance):
-        pass
+        instance.status = HomeopathicAppointmentStatus.DELETED
+        instance.save()
 
 
+# Medicine views
 class HomeopathicMedicineListView(ListCreateAPIView):
     queryset = HomeopathicMedicine.objects.all()
-    serializer_class = HomeopathicMedicineListSerializer
+    serializer_class = HomeopathicMedicineSerializer
     permission_classes = [IsOrganizationMember]
-    filter_backends = [DjangoFilterBackend]
-    # filterset_class = HomeopathicMedicineFilter
-    filterset_fields = ["name", "is_available", "expiration_date", "manufacturer"]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+
+    search_fields = ["name", "manufacturer"]
+    filterset_fields = {
+        "is_available": ["exact"],
+        "expiration_date": ["exact", "gt", "lt"],
+    }
+
+    def perform_create(self, serializer):
+        organization_uid = self.kwargs.get("organization_uid")
+        organization = Organization.objects.filter(uid=organization_uid).first()
+        serializer.save(organization=organization)
 
     def get_queryset(self):
         organization_uid = self.kwargs.get("organization_uid")
 
-        return self.queryset.filter(organization__uid=organization_uid)
+        return self.queryset.filter(
+            organization__uid=organization_uid,
+            status=HomeopathicMedicineStatus.AVAILABLE,
+        )
 
 
 class HomeopathicMedicineDetailView(RetrieveUpdateDestroyAPIView):
     queryset = HomeopathicMedicine.objects.all()
-    serializer_class = HomeopathicMedicineDetailSerializer
+    serializer_class = HomeopathicMedicineSerializer
     permission_classes = [IsOrganizationMember]
 
     def get_object(self):
         organization_uid = self.kwargs.get("organization_uid")
         medicine_uid = self.kwargs.get("medicine_uid")
-        return self.queryset.get(organization__uid=organization_uid, uid=medicine_uid)
+        return self.queryset.get(
+            organization__uid=organization_uid,
+            uid=medicine_uid,
+            status=HomeopathicMedicineStatus.AVAILABLE,
+        )
 
     def perform_destroy(self, instance):
         instance.status = HomeopathicMedicineStatus.DELETED
