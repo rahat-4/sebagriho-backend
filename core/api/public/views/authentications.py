@@ -297,3 +297,10 @@ class MeView(APIView):
     def get(self, request):
         serializer = MeSerializer(request.user, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserDetailView(APIView):
+    def get(self, request, uid):
+        user = User.objects.filter(uid=uid).first()
+        serializer = MeSerializer(user, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)

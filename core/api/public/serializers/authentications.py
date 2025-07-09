@@ -1,4 +1,6 @@
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -153,6 +155,11 @@ class ForgotPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {"confirm_password": "Password fields didn't match."}
             )
+
+        try:
+            validate_password(attrs["password"])
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"password": e.messages})
 
         session_id = attrs.get("session_id")
 

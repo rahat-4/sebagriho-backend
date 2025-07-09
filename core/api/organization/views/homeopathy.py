@@ -79,6 +79,10 @@ class HomeopathicPatientppointmentListView(ListCreateAPIView):
     serializer_class = HomeopathicPatientAppointmentListSerializer
     permission_classes = [IsOrganizationMember]
     filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = {
+        "created_at": ["exact", "gt", "lt"],
+        "updated_at": ["exact", "gt", "lt"],
+    }
     search_fields = [
         "homeopathic_patient__user__first_name",
         "homeopathic_patient__user__last_name",
