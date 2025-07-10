@@ -37,7 +37,7 @@ from ..serializers.homeopathy import (
 class HomeopathicProfileDetailView(RetrieveUpdateAPIView):
     queryset = OrganizationMember.objects.all()
     serializer_class = HomeopathicProfileDetailSerializer
-    permission_classes = [IsOrganizationMember]
+    permission_classes = []
 
     def get_object(self):
         organization_uid = self.kwargs.get("organization_uid")
@@ -91,12 +91,19 @@ class HomeopathicPatientppointmentListView(ListCreateAPIView):
     ]
 
     def get_queryset(self):
+        recent = self.request.query_params.get("recent")
+
         organization_uid = self.kwargs.get("organization_uid")
         patient_uid = self.kwargs.get("patient_uid")
 
-        return self.queryset.filter(
+        base_queryset = self.queryset.filter(
             organization__uid=organization_uid, homeopathic_patient__uid=patient_uid
         )
+
+        if recent == "true":
+            return base_queryset.order_by("-created_at")[:1]
+
+        return base_queryset
 
 
 class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
