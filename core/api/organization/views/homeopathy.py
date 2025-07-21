@@ -3,7 +3,7 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 from common.filters import HomeopathicMedicineFilter
@@ -139,6 +139,7 @@ class HomeopathicMedicineListView(ListCreateAPIView):
         "is_available": ["exact"],
         "expiration_date": ["exact", "gt", "lt"],
     }
+    ordering_fields = ["created_at"]
 
     def perform_create(self, serializer):
         organization_uid = self.kwargs.get("organization_uid")
