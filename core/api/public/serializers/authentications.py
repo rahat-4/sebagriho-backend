@@ -20,21 +20,6 @@ from common.serializers import OrganizationSlimSerializer
 User = get_user_model()
 
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-
-        # Add custom claims
-        token["user_uid"] = str(user.uid)
-        token["is_admin"] = user.is_admin
-        token["is_owner"] = user.is_owner
-        if user.is_owner:
-            token["organization_uid"] = str(user.get_organization().uid)
-
-        return token
-
-
 class InitialRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegistrationSession
