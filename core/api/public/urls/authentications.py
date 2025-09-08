@@ -8,7 +8,7 @@ from ..views.authentications import (
     OtpVerificationView,
     CookieTokenObtainPairView,
     CookieTokenRefreshView,
-    LogoutView,
+    CookieTokenLogoutView,
     MeView,
     UserDetailView,
 )
@@ -35,7 +35,7 @@ urlpatterns = [
         name="public.initial-registration",
     ),
     path("/token/refresh", CookieTokenRefreshView.as_view(), name="token-refresh"),
-    path("/logout", LogoutView.as_view(), name="ogout"),
+    path("/logout", CookieTokenLogoutView.as_view(), name="logout"),
     path("/login", CookieTokenObtainPairView.as_view(), name="token-obtain-pair"),
     path("/user-detail/<uuid:uid>", UserDetailView.as_view(), name="user-detail"),
     path("/me", MeView.as_view(), name="me"),

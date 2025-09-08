@@ -10,15 +10,15 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
 
 from apps.authentication.models import RegistrationSession
+
+from common.cookies import set_auth_cookies
 
 from ..serializers.authentications import (
     InitialRegistrationSerializer,
@@ -170,8 +170,8 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
             cookie_settings = {
                 "httponly": True,
-                "secure": True,  # False in development, True in production
-                "samesite": "None",
+                "secure": False,  # False in development, True in production
+                "samesite": "Lax",
                 # "samesite": (
                 #     "Lax" if is_dev else "None"
                 # ),  # Lax in development, None in production
@@ -208,87 +208,51 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         return response
 
 
+# class CookieTokenObtainPairView(TokenObtainPairView):
+#     """
+#     Custom login view: issues tokens and sets them in HttpOnly cookies.
+#     """
+
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+
+#         serializer.is_valid(raise_exception=True)
+
+#         data = serializer.validated_data
+
+#         response = Response(data)
+
+#         remember_me = request.data.get("remember_me", False)
+#         set_auth_cookies(response, data["access"], data["refresh"], remember_me)
+
+#         return response
+
+
 class CookieTokenRefreshView(TokenRefreshView):
+    """
+    Custom refresh view: refreshes tokens and resets cookies.
+    """
 
     def post(self, request, *args, **kwargs):
-        refresh_token = request.COOKIES.get("refresh_token")
-        remember_me = request.COOKIES.get("remember_me") == "true"
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        if not refresh_token:
-            return Response(
-                {"detail": "Refresh token not found."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+        data = serializer.validated_data
+        response = Response(data)
 
-        request.data["refresh"] = refresh_token
-        try:
-            response = super().post(request, *args, **kwargs)
-        except TokenError as e:
-            return Response({"detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
-
-        if response.status_code == status.HTTP_200_OK:
-            access = response.data.get("access")
-            refresh = response.data.get("refresh")
-
-            access_max_age = 60 * 15  # 15 minutes
-            refresh_max_age = 60 * 60 * 24  # 1 day
-
-            if remember_me:
-                access_max_age = 60 * 60 * 24  # 24 hours
-                refresh_max_age = 60 * 60 * 24 * 7  # 7 days
-
-            # Cookie settings based on environment
-            is_dev = is_development()
-            cookie_settings = {
-                "httponly": True,
-                "secure": not is_dev,  # False in development, True in production
-                "samesite": (
-                    "Lax" if is_dev else "None"
-                ),  # Lax in development, None in production
-            }
-
-            response.set_cookie(
-                key="access_token",
-                value=access,
-                max_age=access_max_age,
-                **cookie_settings,
-            )
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh,
-                max_age=refresh_max_age,
-                **cookie_settings,
-            )
-
-            response.data = {
-                "message": "Access token refreshed.",
-            }
+        # Check if remember_me cookie exists from login
+        remember_me = request.COOKIES.get("remember_me", False)
+        set_auth_cookies(response, data["access"], data["refresh"], remember_me)
 
         return response
 
 
-class LogoutView(APIView):
-
-    def post(self, request):
-        try:
-            refresh_token = request.COOKIES.get("refresh_token")
-            if refresh_token:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
-        except TokenError:
-            pass
-        except Exception as e:
-            logger.warning(f"Error during logout token blacklisting: {e}")
-
-        response = Response({"message": "Logged out."}, status=status.HTTP_200_OK)
-
-        # Delete cookies — only path/domain can be specified
-        response.delete_cookie("refresh_token", path="/")
-        response.delete_cookie("access_token", path="/")
-
-        if request.COOKIES.get("remember_me"):
-            response.delete_cookie("remember_me", path="/")
-
+class CookieTokenLogoutView(APIView):
+    def post(self, request, *args, **kwargs):
+        response = Response({"detail": "Logged out successfully"})
+        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        response.delete_cookie("refresh_token")
+        response.delete_cookie("remember_me")
         return response
 
 

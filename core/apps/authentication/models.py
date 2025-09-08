@@ -100,7 +100,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
         return self.get_full_name() if self.get_full_name() else str(self.phone)
 
     def get_organization(self):
-        return self.organization_members.get().organization
+        return self.organization_members.first().organization
 
 
 class RegistrationSession(BaseModelWithUid):

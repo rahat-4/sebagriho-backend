@@ -176,11 +176,17 @@ REST_FRAMEWORK = {
 
 # JWT configuration
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    # Custom cookie settings
+    "AUTH_COOKIE": "access_token",
+    "AUTH_COOKIE_SECURE": not DEBUG,  # False in development and True in production
+    "AUTH_COOKIE_HTTP_ONLY": True,
+    "AUTH_COOKIE_SAMESITE": "None" if not DEBUG else "Lax",
 }
 
 
@@ -190,24 +196,3 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
-
-# # Additional CORS settings for development
-# if DEBUG:
-#     CORS_ALLOW_ALL_ORIGINS = False  # Keep false for security
-#     CORS_ALLOWED_HEADERS = [
-#         "accept",
-#         "accept-encoding",
-#         "authorization",
-#         "content-type",
-#         "dnt",
-#         "origin",
-#         "user-agent",
-#         "x-csrftoken",
-#         "x-requested-with",
-#     ]
-
-# # Cookie settings
-# SESSION_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"
-# SESSION_COOKIE_SECURE = not DEBUG  # False in development and True in production
-# CSRF_COOKIE_SECURE = not DEBUG  # False in development and True in production
-# CSRF_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"

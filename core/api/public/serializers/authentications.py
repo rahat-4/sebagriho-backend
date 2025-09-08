@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
@@ -8,11 +8,9 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 
 from apps.authentication.models import RegistrationSession
-from apps.organizations.models import Organization, OrganizationMember
+from apps.organizations.models import OrganizationMember
 import random
 import string
-from rest_framework_simplejwt.tokens import RefreshToken
-from phonenumber_field.serializerfields import PhoneNumberField
 
 
 from common.serializers import OrganizationSlimSerializer

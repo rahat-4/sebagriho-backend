@@ -4,12 +4,6 @@ from django.urls import path, include
 
 from django.conf.urls.static import static
 
-from api.public.views.authentications import (
-    CookieTokenObtainPairView,
-    LogoutView,
-    CookieTokenRefreshView,
-)
-
 urlpatterns = [
     path("super-admin/", admin.site.urls),
     # path("api-auth/", include("rest_framework.urls")),
