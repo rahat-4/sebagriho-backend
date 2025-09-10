@@ -134,80 +134,6 @@ class PhoneVerificationView(APIView):
         return Response(response, status=http_status)
 
 
-# class CookieTokenObtainPairView(TokenObtainPairView):
-
-#     def post(self, request, *args, **kwargs):
-#         phone = request.data.get("phone")
-#         password = request.data.get("password")
-#         remember_me = request.data.get("rememberMe") == "true"
-
-#         errors = {}
-
-#         user = User.objects.filter(phone=phone).first()
-#         if not user:
-#             errors["phone"] = ["User not found."]
-#         elif not user.check_password(password):
-#             errors["password"] = ["Password is incorrect."]
-
-#         if errors:
-#             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-
-#         response = super().post(request, *args, **kwargs)
-
-#         if response.status_code == status.HTTP_200_OK:
-#             access = response.data.get("access")
-#             refresh = response.data.get("refresh")
-
-#             access_max_age = 60 * 15  # 15 minutes
-#             refresh_max_age = 60 * 60 * 24  # 1 day
-
-#             if remember_me:
-#                 access_max_age = 60 * 60 * 24  # 24 hours
-#                 refresh_max_age = 60 * 60 * 24 * 7  # 7 days
-
-#             # Cookie settings based on environment
-#             is_dev = is_development()
-
-#             cookie_settings = {
-#                 "httponly": True,
-#                 "secure": False,  # False in development, True in production
-#                 "samesite": "Lax",
-#                 # "samesite": (
-#                 #     "Lax" if is_dev else "None"
-#                 # ),  # Lax in development, None in production
-#             }
-
-#             if remember_me:
-#                 response.set_cookie(
-#                     key="remember_me",
-#                     value="true",
-#                     max_age=refresh_max_age,
-#                     httponly=False,  # Needs to be readable by JS
-#                     secure=cookie_settings["secure"],
-#                     samesite=cookie_settings["samesite"],
-#                 )
-
-#             response.set_cookie(
-#                 key="access_token",
-#                 value=access,
-#                 max_age=access_max_age,
-#                 **cookie_settings,
-#             )
-#             response.set_cookie(
-#                 key="refresh_token",
-#                 value=refresh,
-#                 max_age=refresh_max_age,
-#                 **cookie_settings,
-#             )
-
-#             response.data = {
-#                 "message": "Login successful.",
-#                 "user_name": user.get_full_name(),
-#             }
-
-#         return response
-
-
 class CookieTokenObtainPairView(TokenObtainPairView):
     """
     Custom login view: issues tokens and sets them in HttpOnly cookies.
@@ -219,6 +145,10 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
+
+        user = serializer.user
+
+        data["user_name"] = user.get_full_name()
 
         response = Response(data)
 
