@@ -1,10 +1,10 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 
-# Databases
+# SQLite / Local DBs
 *.sqlite3
 *.db
 
@@ -23,11 +23,6 @@ yarn-error.log
 # Git
 .git/
 .gitignore
-
-# Docker / CI
-docker-compose.yml
-Dockerfile
-*.dockerfile
 
 # OS / Editor junk
 *.swp
