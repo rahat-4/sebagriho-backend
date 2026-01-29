@@ -187,28 +187,62 @@ REST_FRAMEWORK = {
 
 # JWT configuration
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=90),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    # Custom cookie settings
     "AUTH_COOKIE": "access_token",
-    "AUTH_COOKIE_SECURE": not DEBUG,  # False in development and True in production
+    "AUTH_COOKIE_SECURE": config("AUTH_COOKIE_SECURE", default=True, cast=bool),
     "AUTH_COOKIE_HTTP_ONLY": True,
-    "AUTH_COOKIE_SAMESITE": "None" if not DEBUG else "Lax",
+    "AUTH_COOKIE_SAMESITE": "None",
 }
-
 
 # # CORS settings
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://api.sebagriho.com",
+    "https://api.sebagriho.com",
+    "https://sebagriho.com",
+    "https://www.sebagriho.com",
+]
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
+    "https://sebagriho.com",
+    "https://www.sebagriho.com",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+# Add these settings for proper HTTPS detection behind nginx proxy
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Keep your existing SSL settings
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
+SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
+CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
+
+# Disable redirect for HTTPS when accessing via HTTP during development
+SECURE_REDIRECT_EXEMPT = [r"^api/"]

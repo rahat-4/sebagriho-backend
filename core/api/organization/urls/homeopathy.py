@@ -2,10 +2,13 @@ from django.urls import path
 
 from ..views.homeopathy import (
     HomeopathicProfileDetailView,
+    HomeopathicDashboardView,
     HomeopathicPatientListView,
     HomeopathicPatientDetailView,
-    HomeopathicPatientppointmentListView,
+    HomeopathicAppointmentListView,
     HomeopathicAppointmentDetailView,
+    HomeopathicPatientppointmentListView,
+    HomeopathicPatientAppointmentDetailView,
     HomeopathicMedicineListView,
     HomeopathicMedicineDetailView,
 )
@@ -22,8 +25,18 @@ urlpatterns = [
         name="homeopathic.medicine-list",
     ),
     path(
-        "/<uuid:organization_uid>/patients/<uuid:patient_uid>/appointments/<uuid:appointment_uid>",
+        "/<uuid:organization_uid>/appointments/<uuid:appointment_uid>",
         HomeopathicAppointmentDetailView.as_view(),
+        name="homeopathic.patient-appointment-detail",
+    ),
+    path(
+        "/<uuid:organization_uid>/appointments",
+        HomeopathicAppointmentListView.as_view(),
+        name="homeopathic.patient-appointment-list",
+    ),
+    path(
+        "/<uuid:organization_uid>/patients/<uuid:patient_uid>/appointments/<uuid:appointment_uid>",
+        HomeopathicPatientAppointmentDetailView.as_view(),
         name="homeopathic.patient-appointment-detail",
     ),
     path(
@@ -40,6 +53,11 @@ urlpatterns = [
         "/<uuid:organization_uid>/patients",
         HomeopathicPatientListView.as_view(),
         name="homeopathic.patient-list",
+    ),
+    path(
+        "/uuid:organization_uid/dashboard",
+        HomeopathicDashboardView.as_view(),
+        name="homeopathic.dashboard",
     ),
     path(
         "/profile/<uuid:organization_uid>",

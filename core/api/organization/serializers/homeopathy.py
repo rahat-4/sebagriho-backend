@@ -180,6 +180,47 @@ class HomeopathicPatientDetailSerializer(serializers.ModelSerializer):
         return instance
 
 
+class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
+    medicines = serializers.SlugRelatedField(
+        many=True,
+        queryset=HomeopathicMedicine.objects.all(),
+        slug_field="uid",
+        allow_empty=True,
+        allow_null=True,
+        required=False,
+    )
+
+    class Meta:
+        model = HomeopathicAppointment
+        fields = [
+            "uid",
+            "slug",
+            "symptoms",
+            "treatment_effectiveness",
+            "appointment_file",
+            "medicines",
+            "created_at",
+            "updated_at",
+        ]
+
+    def create(self, validated_data):
+        medicines = validated_data.pop("medicines", [])
+
+        organization_uid = self.context["view"].kwargs.get("organization_uid")
+        patient_uid = self.context["view"].kwargs.get("patient_uid")
+
+        organization = Organization.objects.filter(uid=organization_uid).first()
+        patient = HomeopathicPatient.objects.filter(uid=patient_uid).first()
+
+        appointment = HomeopathicAppointment.objects.create(
+            organization=organization, homeopathic_patient=patient, **validated_data
+        )
+
+        appointment.medicines.add(*medicines)
+
+        return appointment
+
+
 class HomeopathicPatientAppointmentListSerializer(serializers.ModelSerializer):
     medicines = serializers.SlugRelatedField(
         many=True,

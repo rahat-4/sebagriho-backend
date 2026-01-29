@@ -148,7 +148,14 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
         user = serializer.user
 
+        print("user logged in:", user)
+        print("tokens:", data)
+
+        data["admin"] = user.is_admin
         data["user_name"] = user.get_full_name()
+        data["organization_uid"] = (
+            user.get_organization().uid if user.get_organization() else None
+        )
 
         response = Response(data)
 

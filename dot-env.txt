@@ -1,3 +1,16 @@
 SECRET_KEY = rahat
-ALLOWED_HOSTS = localhost,127.0.0.1,192.168.10.21,192.168.10.83
-DEBUG = True
+ALLOWED_HOSTS = localhost,127.0.0.1,192.168.10.21,192.168.10.83,94.136.191.254,api.sebagriho.com,sebagriho.com,www.sebagriho.com
+DEBUG = 1
+
+# Database
+DB_NAME = sebagriho
+DB_USER = postgres
+DB_PASSWORD = admin
+DB_HOST = db
+DB_PORT = 5432
+
+# Pgadmin
+PGADMIN_DEFAULT_EMAIL = admin@example.com
+PGADMIN_DEFAULT_PASSWORD = admin
+
+AUTH_COOKIE_SECURE=1

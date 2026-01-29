@@ -3,10 +3,10 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
+from rest_framework.views import APIView
+
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
-
-from common.filters import HomeopathicMedicineFilter
 
 from apps.authentication.choices import UserStatus
 from apps.homeopathy.models import (
@@ -19,19 +19,24 @@ from apps.homeopathy.choices import (
     HomeopathicAppointmentStatus,
     HomeopathicMedicineStatus,
 )
-
 from apps.organizations.models import Organization, OrganizationMember
 
+from common.filters import HomeopathicMedicineFilter
 from common.permissions import IsOrganizationMember
 
 from ..serializers.homeopathy import (
     HomeopathicProfileDetailSerializer,
     HomeopathicPatientListSerializer,
+    HomeopathicAppointmentSerializer,
     HomeopathicPatientDetailSerializer,
     HomeopathicPatientAppointmentListSerializer,
     HomeopathicAppointmentDetailSerializer,
     HomeopathicMedicineSerializer,
 )
+
+
+class HomeopathicDashboardView(APIView):
+    pass
 
 
 class HomeopathicProfileDetailView(RetrieveUpdateAPIView):
@@ -73,7 +78,18 @@ class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
         instance.save()
 
 
-# Homeopathic appointment views
+# Homeopathis appointment views
+class HomeopathicAppointmentListView(ListCreateAPIView):
+    queryset = HomeopathicAppointment.objects.all()
+    serializer_class = HomeopathicAppointmentSerializer
+
+
+class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = HomeopathicAppointment.objects.all()
+    serializer_class = HomeopathicAppointmentSerializer
+
+
+# Homeopathic patient appointment views
 class HomeopathicPatientppointmentListView(ListCreateAPIView):
     queryset = HomeopathicAppointment.objects.all()
     serializer_class = HomeopathicPatientAppointmentListSerializer
@@ -106,7 +122,7 @@ class HomeopathicPatientppointmentListView(ListCreateAPIView):
         return base_queryset
 
 
-class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
+class HomeopathicPatientAppointmentDetailView(RetrieveUpdateDestroyAPIView):
     queryset = HomeopathicAppointment.objects.all()
     serializer_class = HomeopathicAppointmentDetailSerializer
     permission_classes = [IsOrganizationMember]
