@@ -21,6 +21,7 @@ class OrganizationListView(ListCreateAPIView):
 class OrganizationMemberListCreate(ListCreateAPIView):
     queryset = OrganizationMember.objects.all()
     serializer_class = OrganizationMemberSerializer
+    permission_classes = [IsAdmin]
 
 
 class OrganizationMemberRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):

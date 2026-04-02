@@ -19,6 +19,12 @@ class JWTAuthCookieMiddleware:
             # Check if Authorization header is already present
             auth_header = request.META.get("HTTP_AUTHORIZATION")
 
+            print(
+                "JWTAuthCookieMiddleware: Checking for Authorization header and cookies"
+            )
+            print("Request path:", request.path)
+            print("Authorization header:", auth_header)
+
             if not auth_header or not auth_header.startswith("Bearer "):
                 # Get access token from HttpOnly cookie
                 access_token = request.COOKIES.get("access_token")

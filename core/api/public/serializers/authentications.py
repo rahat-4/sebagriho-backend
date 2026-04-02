@@ -116,6 +116,8 @@ class OtpVerificationSerializer(serializers.Serializer):
                 {"otp": "OTP expired. Please request a new one."}
             )
 
+        print("LLLLLLLLLLLLLLLLLLL", session)
+
         if session.otp != otp:
             raise serializers.ValidationError({"otp": "Invalid OTP. Please try again."})
 
@@ -170,7 +172,9 @@ class ForgotPasswordSerializer(serializers.Serializer):
         password = validated_data.get("password")
         session = self.session
 
-        user = User.objects.get(phone=session.phone)
+        user = User.objects.filter(phone=session.phone).first()
+        if not user:
+            raise serializers.ValidationError("User not found.")
         user.set_password(password)
         user.save()
 
@@ -235,9 +239,15 @@ class MeSerializer(serializers.ModelSerializer):
         return obj.get_full_name()
 
     def get_organization(self, obj):
-        if obj.is_owner:
-            organization = OrganizationMember.objects.get(user=obj).organization
-            return OrganizationSlimSerializer(organization, context=self.context).data
+        member = (
+            OrganizationMember.objects.filter(user=obj)
+            .select_related("organization")
+            .first()
+        )
+        if member:
+            return OrganizationSlimSerializer(
+                member.organization, context=self.context
+            ).data
         return None
 
     def to_representation(self, instance):

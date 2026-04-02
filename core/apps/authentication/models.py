@@ -22,7 +22,7 @@ from common.models import BaseModelWithUid
 class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
     slug = AutoSlugField(populate_from=get_user_slug, unique=True)
     phone = PhoneNumberField(unique=True)
-    email = models.EmailField(max_length=255, unique=True, blank=True, null=True)
+    email = models.EmailField(max_length=255, blank=True, null=True)
     secondary_phone = PhoneNumberField(blank=True, null=True)
     secondary_email = models.EmailField(blank=True, null=True)
     first_name = models.CharField(max_length=255, blank=True, null=True)
@@ -66,11 +66,21 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
     is_superuser = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_owner = models.BooleanField(default=False)
+    last_login_ip = models.GenericIPAddressField(null=True, blank=True)
 
     objects = UserManager()
 
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = []
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["email"],
+                condition=~models.Q(email=None),
+                name="unique_non_null_email",
+            )
+        ]
 
     def __str__(self):
         return self.get_display_name()
@@ -98,9 +108,6 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
         Return the most descriptive name available.
         """
         return self.get_full_name() if self.get_full_name() else str(self.phone)
-
-    def get_organization(self):
-        return self.organization_members.first().organization
 
 
 class RegistrationSession(BaseModelWithUid):
@@ -132,8 +139,9 @@ class RegistrationSession(BaseModelWithUid):
     )
     date_of_birth = models.DateField(blank=True, null=True)
     is_owner = models.BooleanField(default=False)
-
     otp = models.CharField(max_length=6, blank=True, null=True)
+
+    otp_attempts = models.IntegerField(default=0)
     otp_created_at = models.DateTimeField(blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     expires_at = models.DateTimeField()
@@ -153,3 +161,11 @@ class RegistrationSession(BaseModelWithUid):
 
         # OTP expire after 5 minutes
         return timezone.now() > (self.otp_created_at + timezone.timedelta(minutes=5))
+
+
+class LoginAudit(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    success = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)

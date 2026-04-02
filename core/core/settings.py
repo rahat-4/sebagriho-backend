@@ -57,8 +57,10 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "common.middleware.jwt_middleware.JWTAuthCookieMiddleware",  # Custom middleware for JWT auth via cookies
+    # "common.middleware.subdomain.SubdomainMiddleware",  # Custom middleware for subdomain handling
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -69,13 +71,13 @@ MIDDLEWARE = [
 
 AUTH_USER_MODEL = "authentication.User"
 
-AUTHENTICATION_BACKENDS = [
-    "axes.backends.AxesBackend",
-    "django.contrib.auth.backends.ModelBackend",
-]
+# AUTHENTICATION_BACKENDS = [
+#     "axes.backends.AxesBackend",
+#     "apps.authentication.backends.PhoneOrEmailBackend",
+# ]
 
 # Block user after 5 failed login attempts
-AXES_FAILURE_LIMIT = 5  # Lockout after 5 failed attempts
+AXES_FAILURE_LIMIT = 50  # Lockout after 5 failed attempts
 AXES_COOLOFF_TIME = 1  # Lockout time in hours
 AXES_RESET_ON_SUCCESS = True  # Reset failed attempts after a successful login
 
@@ -162,6 +164,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -178,7 +181,6 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -243,6 +245,11 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
 CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
+
+# Production security settings (uncomment in production)
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# X_FRAME_OPTIONS = "DENY"
 
 # Disable redirect for HTTPS when accessing via HTTP during development
 SECURE_REDIRECT_EXEMPT = [r"^api/"]

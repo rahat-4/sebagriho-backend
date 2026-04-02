@@ -118,13 +118,17 @@ class PhoneVerificationView(APIView):
         if user:
             # Generate OTP
             otp = "".join(random.choices(string.digits, k=6))
-            initial_registration = RegistrationSession.objects.create(
-                phone=phone, otp=otp, otp_created_at=timezone.now()
+            session, created = RegistrationSession.objects.update_or_create(
+                phone=phone,
+                defaults={
+                    "otp": otp,
+                    "otp_created_at": timezone.now(),
+                },
             )
 
             response = {
                 "message": "OTP sent to your phone.",
-                "session_id": initial_registration.uid,
+                "session_id": session.uid,
             }
             http_status = status.HTTP_200_OK
         else:
@@ -140,6 +144,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
     """
 
     def post(self, request, *args, **kwargs):
+        print(";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;", request.data)
         serializer = self.get_serializer(data=request.data)
 
         serializer.is_valid(raise_exception=True)
@@ -151,11 +156,11 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         print("user logged in:", user)
         print("tokens:", data)
 
+        organization = getattr(request, "organization", None)
+
         data["admin"] = user.is_admin
         data["user_name"] = user.get_full_name()
-        data["organization_uid"] = (
-            user.get_organization().uid if user.get_organization() else None
-        )
+        data["organization_uid"] = organization.uid if organization else None
 
         response = Response(data)
 
@@ -187,7 +192,10 @@ class CookieTokenRefreshView(TokenRefreshView):
 class CookieTokenLogoutView(APIView):
     def post(self, request, *args, **kwargs):
         response = Response({"detail": "Logged out successfully"})
-        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
+        response.delete_cookie(
+            settings.SIMPLE_JWT["AUTH_COOKIE"],
+            samesite="Lax",
+        )
         response.delete_cookie("refresh_token")
         response.delete_cookie("remember_me")
         return response
@@ -195,6 +203,7 @@ class CookieTokenLogoutView(APIView):
 
 class MeView(APIView):
     def get(self, request):
+        print("MeView: Current user:", request.user)
         serializer = MeSerializer(request.user, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 

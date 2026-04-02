@@ -22,3 +22,9 @@ class OrganizationStatus(models.TextChoices):
     INACTIVE = "INACTIVE", "Inactive"
     DELETED = "DELETED", "Deleted"
     SUSPENDED = "SUSPENDED", "Suspended"
+
+
+class OrganizationMemberStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    INACTIVE = "INACTIVE", "Inactive"
+    SUSPENDED = "SUSPENDED", "Suspended"
