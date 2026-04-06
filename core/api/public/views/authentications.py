@@ -160,7 +160,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
         data["admin"] = user.is_admin
         data["user_name"] = user.get_full_name()
-        data["organization_uid"] = organization.uid if organization else None
+        data["organization_uid"] = organization.uid if request.organization else None
 
         response = Response(data)
 

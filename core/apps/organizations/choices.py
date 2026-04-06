@@ -28,3 +28,16 @@ class OrganizationMemberStatus(models.TextChoices):
     ACTIVE = "ACTIVE", "Active"
     INACTIVE = "INACTIVE", "Inactive"
     SUSPENDED = "SUSPENDED", "Suspended"
+
+
+class AppearanceFontFamilyType(models.TextChoices):
+    ROBOTO = "ROBOTO", "Roboto"
+    POPPINS = "POPPINS", "Poppins"
+    PLAYFAIR_DISPLAY = "PLAYFAIR_DISPLAY", "Playfair Display"
+    RALEWAY = "RALEWAY", "Raleway"
+    SATISFY = "SATISFY", "Satisfy"
+    KARLA = "KARLA", "Karla"
+    MONTSERRAT = "MONTSERRAT", "Montserrat"
+    INTER = "INTER", "Inter"
+    CAVEAT = "CAVEAT", "Caveat"
+    OPEN_SANS = "OPEN_SANS", "Open Sans"

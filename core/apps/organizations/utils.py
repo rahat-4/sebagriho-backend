@@ -19,3 +19,11 @@ def get_organization_slug(instance) -> str:
 
 def get_organization_media_path_prefix(instance, filename) -> str:
     return f"organizations/{instance.slug}/{filename}"
+
+
+def appearance_logo_upload_path(instance, filename) -> str:
+    return f"organizations/{instance.organization.slug}/appearance/logo/{filename}"
+
+
+def appearance_favicon_upload_path(instance, filename) -> str:
+    return f"organizations/{instance.organization.slug}/appearance/favicon/{filename}"

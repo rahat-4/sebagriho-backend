@@ -1,4 +1,5 @@
 import re
+from urllib import request
 
 from django.http import HttpResponseRedirect, JsonResponse
 
@@ -10,12 +11,11 @@ class SubdomainMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        host = request.get_host().split(":")[0]  # Remove port if present
-        subdomain_pattern = re.compile(r"^(?P<subdomain>[^.]+)\.example\.com$")
-        match = subdomain_pattern.match(host)
+        subdomain = request.headers.get("X-ORGANIZATION-SUBDOMAIN", "")
 
-        if match:
-            subdomain = match.group("subdomain")
+        print("SubdomainMiddleware: Extracted subdomain:", subdomain)
+
+        if subdomain:
             try:
                 organization = Organization.objects.get(subdomain=subdomain)
                 request.organization = organization

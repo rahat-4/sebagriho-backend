@@ -60,7 +60,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "common.middleware.jwt_middleware.JWTAuthCookieMiddleware",  # Custom middleware for JWT auth via cookies
-    # "common.middleware.subdomain.SubdomainMiddleware",  # Custom middleware for subdomain handling
+    "common.middleware.subdomain.SubdomainMiddleware",  # Custom middleware for subdomain handling
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -229,6 +229,7 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+    "x-organization-subdomain",
 ]
 
 CSRF_TRUSTED_ORIGINS = [

@@ -1,16 +1,26 @@
 from autoslug import AutoSlugField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+
 
 from common.models import BaseModelWithUid
 
-from .choices import OrganizationType, OrganizationStatus, OrganizationMemberStatus
+from .choices import (
+    OrganizationType,
+    OrganizationStatus,
+    OrganizationMemberStatus,
+    AppearanceFontFamilyType,
+)
 from .utils import (
     get_organization_slug,
     get_organization_media_path_prefix,
+    appearance_favicon_upload_path,
+    appearance_logo_upload_path,
     validate_subdomain,
 )
 
@@ -18,6 +28,13 @@ User = get_user_model()
 
 
 class Organization(BaseModelWithUid):
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sub_organizations",
+    )
     slug = AutoSlugField(unique=True, populate_from=get_organization_slug)
     subdomain = models.CharField(
         max_length=63,
@@ -28,13 +45,6 @@ class Organization(BaseModelWithUid):
     title = models.CharField(max_length=255, blank=True, null=True)
     logo = models.ImageField(
         upload_to=get_organization_media_path_prefix, blank=True, null=True
-    )
-    parent = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="sub_organizations",
     )
     organization_type = models.CharField(
         max_length=25,
@@ -130,3 +140,61 @@ class OrganizationRole(BaseModelWithUid):
 
     def __str__(self):
         return f"{self.organization.name}: {self.name}"
+
+
+class Appearance(BaseModelWithUid):
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="appearance_settings",
+        verbose_name=_("Organization"),
+    )
+    about = models.TextField(blank=True, null=True, verbose_name=_("About"))
+    site_title = models.CharField(
+        max_length=255,
+        default="Sebagriho - Connecting Doctors and Patients",
+        verbose_name=_("Site Title"),
+    )
+    logo = models.ImageField(
+        upload_to=appearance_logo_upload_path,
+        blank=True,
+        null=True,
+    )
+    fav_icon = models.ImageField(
+        upload_to=appearance_favicon_upload_path,
+        blank=True,
+        null=True,
+        verbose_name=_("Favicon"),
+    )
+    primary_color = models.CharField(
+        max_length=7,
+        default="#308e87",
+        verbose_name=_("Primary Color"),
+    )
+    secondary_color = models.CharField(
+        max_length=7,
+        default="#f39159",
+        verbose_name=_("Secondary Color"),
+    )
+    font_family = models.CharField(
+        max_length=64,
+        choices=AppearanceFontFamilyType.choices,
+        default=AppearanceFontFamilyType.ROBOTO,
+        verbose_name=_("Font Family"),
+    )
+
+    class Meta:
+        verbose_name = _("Appearance Setting")
+        verbose_name_plural = _("Appearance Settings")
+        ordering = ["-created_at"]
+
+    def clean(self):
+        if self.network and self.organization:
+            raise ValidationError(_("Only one of network or organization can be set."))
+
+    def __str__(self):
+        if self.organization:
+            return f"Appearance Settings for Organization {self.organization.name}"
+        return "Appearance Settings"

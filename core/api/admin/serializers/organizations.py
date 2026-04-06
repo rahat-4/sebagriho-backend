@@ -19,6 +19,7 @@ class OrganizationListSerializers(serializers.ModelSerializer):
         fields = [
             "uid",
             "slug",
+            "subdomain",
             "name",
             "parent",
             "logo",
