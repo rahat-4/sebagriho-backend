@@ -15,52 +15,52 @@ from ..views.homeopathy import (
 
 urlpatterns = [
     path(
-        "/<uuid:organization_uid>/medicines/<uuid:medicine_uid>",
+        "/<slug:organization_slug>/medicines/<uuid:medicine_uid>",
         HomeopathicMedicineDetailView.as_view(),
         name="homeopathic.medicine-detail",
     ),
     path(
-        "/<uuid:organization_uid>/medicines",
+        "/<slug:organization_slug>/medicines",
         HomeopathicMedicineListView.as_view(),
         name="homeopathic.medicine-list",
     ),
     path(
-        "/<uuid:organization_uid>/appointments/<uuid:appointment_uid>",
+        "/<slug:organization_slug>/appointments/<uuid:appointment_uid>",
         HomeopathicAppointmentDetailView.as_view(),
         name="homeopathic.patient-appointment-detail",
     ),
     path(
-        "/<uuid:organization_uid>/appointments",
+        "/<slug:organization_slug>/appointments",
         HomeopathicAppointmentListView.as_view(),
         name="homeopathic.patient-appointment-list",
     ),
     path(
-        "/<uuid:organization_uid>/patients/<uuid:patient_uid>/appointments/<uuid:appointment_uid>",
+        "/<slug:organization_slug>/patients/<uuid:patient_uid>/appointments/<uuid:appointment_uid>",
         HomeopathicPatientAppointmentDetailView.as_view(),
         name="homeopathic.patient-appointment-detail",
     ),
     path(
-        "/<uuid:organization_uid>/patients/<uuid:patient_uid>/appointments",
+        "/<slug:organization_slug>/patients/<uuid:patient_uid>/appointments",
         HomeopathicPatientppointmentListView.as_view(),
         name="homeopathic.patient-appointment-list",
     ),
     path(
-        "/<uuid:organization_uid>/patients/<uuid:patient_uid>",
+        "/<slug:organization_slug>/patients/<uuid:patient_uid>",
         HomeopathicPatientDetailView.as_view(),
         name="homeopathic.patient-detail",
     ),
     path(
-        "/<uuid:organization_uid>/patients",
+        "/<slug:organization_slug>/patients",
         HomeopathicPatientListView.as_view(),
         name="homeopathic.patient-list",
     ),
     path(
-        "/uuid:organization_uid/dashboard",
+        "/<slug:organization_slug>/dashboard",
         HomeopathicDashboardView.as_view(),
         name="homeopathic.dashboard",
     ),
     path(
-        "/profile/<uuid:organization_uid>",
+        "/<slug:organization_slug>/profile",
         HomeopathicProfileDetailView.as_view(),
         name="homeopathic.profile-detail",
     ),

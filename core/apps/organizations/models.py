@@ -35,7 +35,7 @@ class Organization(BaseModelWithUid):
         blank=True,
         related_name="sub_organizations",
     )
-    slug = AutoSlugField(unique=True, populate_from=get_organization_slug)
+    slug = AutoSlugField(unique=True, populate_from="name")
     subdomain = models.CharField(
         max_length=63,
         unique=True,

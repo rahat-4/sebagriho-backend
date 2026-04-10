@@ -45,8 +45,8 @@ class HomeopathicProfileDetailView(RetrieveUpdateAPIView):
     permission_classes = []
 
     def get_object(self):
-        organization_uid = self.kwargs.get("organization_uid")
-        return self.queryset.get(organization__uid=organization_uid)
+        organization_slug = self.kwargs.get("organization_slug")
+        return self.queryset.get(organization__slug=organization_slug)
 
 
 # Homeopathic patient views
@@ -56,9 +56,9 @@ class HomeopathicPatientListView(ListCreateAPIView):
     permission_classes = [IsOrganizationMember]
 
     def get_queryset(self):
-        organization_uid = self.kwargs.get("organization_uid")
+        organization_slug = self.kwargs.get("organization_slug")
 
-        return self.queryset.filter(organization__uid=organization_uid)
+        return self.queryset.filter(organization__slug=organization_slug)
 
 
 class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
@@ -67,9 +67,9 @@ class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOrganizationMember]
 
     def get_object(self):
-        organization_uid = self.kwargs.get("organization_uid")
+        organization_slug = self.kwargs.get("organization_slug")
         patient_uid = self.kwargs.get("patient_uid")
-        return self.queryset.get(uid=patient_uid, organization__uid=organization_uid)
+        return self.queryset.get(uid=patient_uid, organization__slug=organization_slug)
 
     def perform_destroy(self, instance):
         instance.user.status = UserStatus.DELETED
@@ -109,11 +109,11 @@ class HomeopathicPatientppointmentListView(ListCreateAPIView):
     def get_queryset(self):
         recent = self.request.query_params.get("recent")
 
-        organization_uid = self.kwargs.get("organization_uid")
+        organization_slug = self.kwargs.get("organization_slug")
         patient_uid = self.kwargs.get("patient_uid")
 
         base_queryset = self.queryset.filter(
-            organization__uid=organization_uid, homeopathic_patient__uid=patient_uid
+            organization__slug=organization_slug, homeopathic_patient__uid=patient_uid
         )
 
         if recent == "true":
@@ -128,12 +128,12 @@ class HomeopathicPatientAppointmentDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOrganizationMember]
 
     def get_object(self):
-        organization_uid = self.kwargs.get("organization_uid")
+        organization_slug = self.kwargs.get("organization_slug")
         patient_uid = self.kwargs.get("patient_uid")
         appointment_uid = self.kwargs.get("appointment_uid")
 
         return self.queryset.get(
-            organization__uid=organization_uid,
+            organization__slug=organization_slug,
             homeopathic_patient__uid=patient_uid,
             uid=appointment_uid,
         )
@@ -158,15 +158,15 @@ class HomeopathicMedicineListView(ListCreateAPIView):
     ordering_fields = ["created_at"]
 
     def perform_create(self, serializer):
-        organization_uid = self.kwargs.get("organization_uid")
-        organization = Organization.objects.filter(uid=organization_uid).first()
+        organization_slug = self.kwargs.get("organization_slug")
+        organization = Organization.objects.filter(slug=organization_slug).first()
         serializer.save(organization=organization)
 
     def get_queryset(self):
-        organization_uid = self.kwargs.get("organization_uid")
+        organization_slug = self.kwargs.get("organization_slug")
 
         return self.queryset.filter(
-            organization__uid=organization_uid,
+            organization__slug=organization_slug,
             status=HomeopathicMedicineStatus.AVAILABLE,
         )
 
@@ -177,10 +177,10 @@ class HomeopathicMedicineDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOrganizationMember]
 
     def get_object(self):
-        organization_uid = self.kwargs.get("organization_uid")
+        organization_slug = self.kwargs.get("organization_slug")
         medicine_uid = self.kwargs.get("medicine_uid")
         return self.queryset.get(
-            organization__uid=organization_uid,
+            organization__slug=organization_slug,
             uid=medicine_uid,
             status=HomeopathicMedicineStatus.AVAILABLE,
         )
