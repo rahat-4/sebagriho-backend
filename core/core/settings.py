@@ -254,3 +254,9 @@ CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
 
 # Disable redirect for HTTPS when accessing via HTTP during development
 SECURE_REDIRECT_EXEMPT = [r"^api/"]
+
+
+# Twilio Configuration
+TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN")
+TWILIO_SMS_FROM = config("TWILIO_SMS_FROM")
