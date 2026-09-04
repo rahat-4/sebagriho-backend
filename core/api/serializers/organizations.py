@@ -64,6 +64,7 @@ class OrganizationOnboardingSerializer(serializers.Serializer):
         # 1. Create User
         user = User.objects.create_user(
             password="Test123pass",
+            is_owner=True,
             **user_data,
         )
 
@@ -81,6 +82,11 @@ class OrganizationOnboardingSerializer(serializers.Serializer):
         organization = Organization.objects.create(**organization_data)
 
         # 3. Create Owner Role
+        parent_owner_role = OrganizationRole.objects.create(
+            name="Owner",
+            organization=parent_organization,
+            is_owner=True,
+        )
         owner_role = OrganizationRole.objects.create(
             name="Owner",
             organization=organization,
@@ -88,6 +94,10 @@ class OrganizationOnboardingSerializer(serializers.Serializer):
         )
 
         # 4. Create Organization Member
+        parent_organization_member = OrganizationMember.objects.create(
+            user=user,
+            organization=parent_organization,
+        )
         member = OrganizationMember.objects.create(
             user=user,
             organization=organization,
@@ -95,6 +105,7 @@ class OrganizationOnboardingSerializer(serializers.Serializer):
 
         # 5. Assign Owner Role
         member.roles.add(owner_role)
+        parent_organization_member.roles.add(parent_owner_role)
 
         # # 6. Create default appearance
         # Appearance.objects.create(
@@ -106,3 +117,29 @@ class OrganizationOnboardingSerializer(serializers.Serializer):
             "organization": organization,
             "member": member,
         }
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = [
+            "uid",
+            "slug",
+            "name",
+            "parent",
+            "logo",
+            "organization_type",
+            "description",
+            "status",
+            "phone",
+            "email",
+            "website",
+            "address",
+            "facebook",
+            "twitter",
+            "linkedin",
+            "instagram",
+            "youtube",
+            "created_at",
+            "updated_at",
+        ]

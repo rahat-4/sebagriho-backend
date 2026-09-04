@@ -1,10 +1,10 @@
 from django.urls import path
 
-from ..views.organizations import OrganizationOnboardingView
+from ..views.organizations import OrganizationListView
 
 urlpatterns = [
     path(
-    "/onboard",
-    OrganizationOnboardingView.as_view(),
-),
+    "",
+    OrganizationListView.as_view()
+    ),
 ]

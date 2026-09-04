@@ -5,7 +5,6 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
@@ -15,15 +14,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.permissions import IsAdmin
-
 from apps.authentication.models import RegistrationSession
 
 from ..serializers.auth import (
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
     OtpVerificationSerializer,
-    InitialRegistrationSerializer,
     MeSerializer,
     SetPasswordSerializer,
 )
@@ -87,7 +83,7 @@ class ForgotPasswordView(CreateAPIView):
 
 class ResetPasswordView(APIView):
     def post(self, request):
-        serializer = ResetPasswordSerializer(data=request.data)
+        serializer = ResetPasswordSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             user = serializer.save()
             return Response(
@@ -99,25 +95,6 @@ class ResetPasswordView(APIView):
                 status=status.HTTP_200_OK,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class InitialRegistrationView(APIView):
-    permission_classes = [IsAdmin]
-
-    def post(self, request):
-        serializer = InitialRegistrationSerializer(
-            data=request.data, context={"request": request}
-        )
-        if serializer.is_valid():
-            session = serializer.save()
-            return Response(
-                {
-                    "message": "Registration information saved. OTP sent to your phone.",
-                    "session_id": session.uid,
-                },
-                status=status.HTTP_201_CREATED,
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class OtpVerificationView(APIView):
     permission_classes = [AllowAny]

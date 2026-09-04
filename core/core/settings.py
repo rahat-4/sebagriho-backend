@@ -30,7 +30,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    "axes",
+    # "axes",
     "autoslug",
     "phonenumber_field",
     "rest_framework",
@@ -66,7 +66,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "axes.middleware.AxesMiddleware",  # To prevent brute force attacks
+    # "axes.middleware.AxesMiddleware",  # To prevent brute force attacks
 ]
 
 AUTH_USER_MODEL = "authentication.User"
@@ -77,9 +77,9 @@ AUTH_USER_MODEL = "authentication.User"
 # ]
 
 # Block user after 5 failed login attempts
-AXES_FAILURE_LIMIT = 50  # Lockout after 5 failed attempts
-AXES_COOLOFF_TIME = 1  # Lockout time in hours
-AXES_RESET_ON_SUCCESS = True  # Reset failed attempts after a successful login
+# AXES_FAILURE_LIMIT = 50  # Lockout after 5 failed attempts
+# AXES_COOLOFF_TIME = 1  # Lockout time in hours
+# AXES_RESET_ON_SUCCESS = True  # Reset failed attempts after a successful login
 
 
 APPEND_SLASH = False
@@ -192,7 +192,7 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,

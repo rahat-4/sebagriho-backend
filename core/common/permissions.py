@@ -26,7 +26,8 @@ class IsAdmin(BasePermission):
         return user.is_superuser or is_admin
 
 
-class IsOrganizationMember(BasePermission):
+
+class IsOrganizationOwner(BasePermission):
     """
     Custom permission to only allow organization members to access certain views.
     """

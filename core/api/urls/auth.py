@@ -7,7 +7,6 @@ from ..views.auth import (
     ResetPasswordView,
     PhoneVerificationView,
     OtpVerificationView,
-    InitialRegistrationView,
     MeView,
     LogoutView,
     LoginView,
@@ -21,18 +20,13 @@ urlpatterns = [
         name="auth.phone-verification",
     ),
     path("/forgot-password", ForgotPasswordView.as_view(), name="auth.forgot-password"),
-    path("/reset-password", ResetPasswordView.as_view(), name="auth.reset-password"),
-
-    path(
-        "/initial-registration",
-        InitialRegistrationView.as_view(),
-        name="auth.initial-registration",
-    ),
     path(
         "/otp-verification",
         OtpVerificationView.as_view(),
         name="auth.otp-verification",
     ),
+    
+    path("/reset-password", ResetPasswordView.as_view(), name="auth.reset-password"),
     path("/set-password", SetPasswordView.as_view(), name="auth.set-password"),
     path("/me", MeView.as_view(), name="me"),
     path("/logout", LogoutView.as_view(), name="auth.logout"),
