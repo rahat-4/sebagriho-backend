@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -112,12 +112,12 @@ class OtpVerificationView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class MeView(APIView):
-    def get(self, request):
-        serializer = MeSerializer(request.user, context={"request": request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class MeView(RetrieveUpdateAPIView):
+    serializer_class = MeSerializer
+    permission_classes = [IsAuthenticated]
 
-
+    def get_object(self):
+        return self.request.user
 
 class LoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):

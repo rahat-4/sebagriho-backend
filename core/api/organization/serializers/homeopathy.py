@@ -10,20 +10,9 @@ from apps.homeopathy.models import (
     HomeopathicMedicine,
 )
 
-from apps.organizations.models import Organization, OrganizationMember
-
-from common.serializers import OrganizationSlimSerializer, UserSlimSerializer
+from apps.organizations.models import Organization
 
 User = get_user_model()
-
-
-class HomeopathicProfileDetailSerializer(serializers.ModelSerializer):
-    organization = OrganizationSlimSerializer()
-    user = UserSlimSerializer()
-
-    class Meta:
-        model = OrganizationMember
-        fields = ["uid", "organization", "user", "created_at", "updated_at"]
 
 
 class HomeopathicPatientListSerializer(serializers.ModelSerializer):

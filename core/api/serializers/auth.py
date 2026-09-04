@@ -14,20 +14,25 @@ User = get_user_model()
 
 class MeSerializer(serializers.ModelSerializer):
     organization_slug = serializers.SerializerMethodField()
-    name = serializers.CharField(source="get_full_name", read_only=True)
+    name = serializers.CharField(
+        source="get_full_name",
+        read_only=True,
+    )
 
     class Meta:
         model = User
         fields = [
             "uid",
+            "avatar",
             "name",
             "phone",
             "email",
+            "first_name",
+            "last_name",
             "gender",
             "nid",
             "nid_front",
             "nid_back",
-            "avatar",
             "blood_group",
             "date_of_birth",
             "is_admin",
@@ -35,27 +40,42 @@ class MeSerializer(serializers.ModelSerializer):
             "is_password_set",
             "organization_slug",
         ]
+        read_only_fields = [
+            "uid",
+            "name",
+            "phone",
+            "email",
+            "is_admin",
+            "is_owner",
+            "is_password_set",
+            "organization_slug",
+        ]
 
     def get_organization_slug(self, obj):
-        organization_member = OrganizationMember.objects.filter(user=obj).first()
-        if organization_member:
-            return organization_member.organization.slug
-        return None
+        return (
+            OrganizationMember.objects
+            .filter(user=obj)
+            .values_list("organization__slug", flat=True)
+            .first()
+        )
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         request = self.context.get("request")
 
         def make_absolute(uri):
-            return request.build_absolute_uri(uri) if uri and request else uri
+            return (
+                request.build_absolute_uri(uri)
+                if uri and request
+                else uri
+            )
 
-        # Convert relative URLs to absolute
-        representation["avatar"] = make_absolute(representation.get("avatar"))
-        representation["nid_front"] = make_absolute(representation.get("nid_front"))
-        representation["nid_back"] = make_absolute(representation.get("nid_back"))
+        for field in ["avatar", "nid_front", "nid_back"]:
+            representation[field] = make_absolute(
+                representation.get(field)
+            )
 
         return representation
-
 
 class OtpVerificationSerializer(serializers.Serializer):
     session_id = serializers.UUIDField(required=True)

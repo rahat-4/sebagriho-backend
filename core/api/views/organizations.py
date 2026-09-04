@@ -1,10 +1,10 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 
 from common.permissions import IsAdmin, IsOrganizationOwner
 
-from apps.organizations.models import OrganizationMember
+from apps.organizations.models import Organization, OrganizationMember
 
-from ..serializers.organizations import OrganizationOnboardingSerializer, OrganizationMemberSerializer, OrganizationMemberUpdateSerializer
+from ..serializers.organizations import OrganizationOnboardingSerializer, OrganizationMemberSerializer, OrganizationMemberUpdateSerializer, OrganizationProfileSerializer
 
 
 
@@ -57,3 +57,14 @@ class OrganizationOnboardDetailView(RetrieveUpdateDestroyAPIView):
             )
             .prefetch_related("roles")
         )
+
+
+class OrganizationProfileView(RetrieveUpdateAPIView):
+    serializer_class = OrganizationProfileSerializer
+    permission_classes = [IsOrganizationOwner]
+    lookup_field = "slug"
+    lookup_url_kwarg = "organization_slug"
+
+    def get_object(self):
+        organization_slug = self.kwargs.get("organization_slug")
+        return Organization.objects.get(slug=organization_slug)

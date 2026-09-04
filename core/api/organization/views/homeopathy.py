@@ -22,10 +22,8 @@ from apps.homeopathy.choices import (
 from apps.organizations.models import Organization, OrganizationMember
 
 from common.filters import HomeopathicMedicineFilter
-from common.permissions import IsOrganizationMember
 
 from ..serializers.homeopathy import (
-    HomeopathicProfileDetailSerializer,
     HomeopathicPatientListSerializer,
     HomeopathicAppointmentSerializer,
     HomeopathicPatientDetailSerializer,
@@ -37,16 +35,6 @@ from ..serializers.homeopathy import (
 
 class HomeopathicDashboardView(APIView):
     pass
-
-
-class HomeopathicProfileDetailView(RetrieveUpdateAPIView):
-    queryset = OrganizationMember.objects.all()
-    serializer_class = HomeopathicProfileDetailSerializer
-    permission_classes = []
-
-    def get_object(self):
-        organization_slug = self.kwargs.get("organization_slug")
-        return self.queryset.get(organization__slug=organization_slug)
 
 
 # Homeopathic patient views
