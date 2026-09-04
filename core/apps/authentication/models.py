@@ -66,6 +66,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModelWithUid):
     is_superuser = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_owner = models.BooleanField(default=False)
+    is_password_set = models.BooleanField(default=False)
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
 
     objects = UserManager()
@@ -161,6 +162,9 @@ class RegistrationSession(BaseModelWithUid):
 
         # OTP expire after 5 minutes
         return timezone.now() > (self.otp_created_at + timezone.timedelta(minutes=5))
+
+    def __str__(self):
+        return f"RegistrationSession for {self.uid}"
 
 
 class LoginAudit(models.Model):

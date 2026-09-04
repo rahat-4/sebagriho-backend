@@ -96,7 +96,7 @@ class InitialRegistrationSerializer(serializers.ModelSerializer):
 
 class MeSerializer(serializers.ModelSerializer):
     organization = serializers.SerializerMethodField()
-    name = serializers.SerializerMethodField()
+    name = serializers.CharField(source="get_full_name", read_only=True)
 
     class Meta:
         model = User
@@ -114,15 +114,17 @@ class MeSerializer(serializers.ModelSerializer):
             "date_of_birth",
             "is_admin",
             "is_owner",
+            "is_password_set",
             "organization",
         ]
 
-    def get_name(self, obj):
-        return obj.get_full_name()
-
     def get_organization(self, obj):
         member = (
-            OrganizationMember.objects.filter(user=obj)
+            OrganizationMember.objects
+            .filter(
+                user=obj,
+                organization__parent__isnull=True,
+            )
             .select_related("organization")
             .first()
         )
@@ -170,7 +172,6 @@ class OtpVerificationSerializer(serializers.Serializer):
                 {"otp": "OTP expired. Please request a new one."}
             )
 
-        print("LLLLLLLLLLLLLLLLLLL", session)
 
         if session.otp != otp:
             raise serializers.ValidationError({"otp": "Invalid OTP. Please try again."})
@@ -206,6 +207,8 @@ class ForgotPasswordSerializer(serializers.Serializer):
             session = RegistrationSession.objects.get(uid=session_id)
         except RegistrationSession.DoesNotExist:
             raise serializers.ValidationError({"session_id": "Invalid session ID."})
+
+        print("Session:", session)
 
         if session.is_expired():
             raise serializers.ValidationError(
@@ -262,5 +265,39 @@ class ResetPasswordSerializer(serializers.Serializer):
         user = self.context["request"].user
         user.set_password(new_password)
         user.save()
+
+        return user
+
+
+class SetPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        write_only=True,
+        min_length=8,
+    )
+    password_confirm = serializers.CharField(
+        write_only=True,
+    )
+
+    def validate(self, attrs):
+        password = attrs["password"]
+        password_confirm = attrs["password_confirm"]
+
+        if password != password_confirm:
+            raise serializers.ValidationError({
+                "password_confirm": "Passwords do not match."
+            })
+
+        user = self.context["user"]
+
+        validate_password(password, user=user)
+
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.context["user"]
+
+        user.set_password(self.validated_data["password"])
+        user.is_password_set = True
+        user.save(update_fields=["password", "is_password_set"])
 
         return user

@@ -1,37 +1,41 @@
 from django.urls import path
 
+from rest_framework_simplejwt.views import TokenRefreshView
+
 from ..views.auth import (
-    CookieTokenLoginView,
-    CookieTokenRefreshView,
-    CookieTokenLogoutView,
     ForgotPasswordView,
     ResetPasswordView,
     PhoneVerificationView,
     OtpVerificationView,
     InitialRegistrationView,
     MeView,
+    LogoutView,
+    LoginView,
+    SetPasswordView
 )
 
 urlpatterns = [
     path(
-        "/initial-registration",
-        InitialRegistrationView.as_view(),
-        name="public.initial-registration",
-    ),
-    path(
         "/phone-verification",
         PhoneVerificationView.as_view(),
         name="auth.phone-verification",
+    ),
+    path("/forgot-password", ForgotPasswordView.as_view(), name="auth.forgot-password"),
+    path("/reset-password", ResetPasswordView.as_view(), name="auth.reset-password"),
+
+    path(
+        "/initial-registration",
+        InitialRegistrationView.as_view(),
+        name="auth.initial-registration",
     ),
     path(
         "/otp-verification",
         OtpVerificationView.as_view(),
         name="auth.otp-verification",
     ),
+    path("/set-password", SetPasswordView.as_view(), name="auth.set-password"),
     path("/me", MeView.as_view(), name="me"),
-    path("/login", CookieTokenLoginView.as_view(), name="auth.token-login"),
-    path("/refresh", CookieTokenRefreshView.as_view(), name="auth.token-refresh"),
-    path("/logout", CookieTokenLogoutView.as_view(), name="auth.token-logout"),
-    path("/forgot-password", ForgotPasswordView.as_view(), name="auth.forgot-password"),
-    path("/reset-password", ResetPasswordView.as_view(), name="auth.reset-password"),
+    path("/logout", LogoutView.as_view(), name="auth.logout"),
+    path("/refresh", TokenRefreshView.as_view(), name="auth.token-refresh"),
+    path("/login", LoginView.as_view(), name="auth.login"),
 ]

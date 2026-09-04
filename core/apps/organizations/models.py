@@ -39,6 +39,8 @@ class Organization(BaseModelWithUid):
     subdomain = models.CharField(
         max_length=63,
         unique=True,
+        blank=True,
+        null=True,
         validators=[validate_subdomain],
     )
     name = models.CharField(max_length=255)
