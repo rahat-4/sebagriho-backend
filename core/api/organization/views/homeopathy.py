@@ -33,10 +33,6 @@ from ..serializers.homeopathy import (
 )
 
 
-class HomeopathicDashboardView(APIView):
-    pass
-
-
 # Homeopathic patient views
 class HomeopathicPatientListView(ListCreateAPIView):
     queryset = HomeopathicPatient.objects.all()

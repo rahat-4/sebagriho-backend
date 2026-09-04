@@ -1,69 +1,10 @@
-from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView,
-)
+from rest_framework.generics import RetrieveUpdateAPIView
 
-from common.permissions import IsAdmin, IsOrganizationOwner
+from common.permissions import IsOrganizationOwner
 
-from apps.organizations.models import Organization, OrganizationMember
+from apps.organizations.models import Organization
 
-from ..serializers.organizations import (
-    OrganizationOnboardingSerializer,
-    OrganizationMemberSerializer,
-    OrganizationMemberUpdateSerializer,
-    OrganizationProfileSerializer,
-)
-
-
-class OrganizationOnboardView(ListCreateAPIView):
-    permission_classes = [IsAdmin]
-
-    def get_serializer_class(self):
-        if self.request.method == "POST":
-            return OrganizationOnboardingSerializer
-
-        return OrganizationMemberSerializer
-
-    def get_queryset(self):
-        return (
-            OrganizationMember.objects.filter(
-                organization__parent__isnull=False,
-            )
-            .select_related(
-                "user",
-                "organization",
-                "organization__parent",
-            )
-            .prefetch_related(
-                "roles",
-            )
-        )
-
-
-class OrganizationOnboardDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdmin]
-    lookup_field = "uid"
-    lookup_url_kwarg = "onboard_uid"
-
-    def get_serializer_class(self):
-        if self.request.method in ["PUT", "PATCH"]:
-            return OrganizationMemberUpdateSerializer
-
-        return OrganizationMemberSerializer
-
-    def get_queryset(self):
-        return (
-            OrganizationMember.objects.filter(
-                organization__parent__isnull=False,
-            )
-            .select_related(
-                "user",
-                "organization",
-                "organization__parent",
-            )
-            .prefetch_related("roles")
-        )
+from ..serializers.organizations import OrganizationProfileSerializer
 
 
 class OrganizationProfileView(RetrieveUpdateAPIView):

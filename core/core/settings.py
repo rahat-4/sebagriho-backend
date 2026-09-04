@@ -59,7 +59,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "common.middleware.jwt_middleware.JWTAuthCookieMiddleware",  # Custom middleware for JWT auth via cookies
+    # "common.middleware.jwt_middleware.JWTAuthCookieMiddleware",  # Custom middleware for JWT auth via cookies
     "common.middleware.subdomain.SubdomainMiddleware",  # Custom middleware for subdomain handling
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
