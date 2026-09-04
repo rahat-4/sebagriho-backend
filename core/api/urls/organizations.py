@@ -1,10 +1,14 @@
 from django.urls import path
 
-from ..views.organizations import OrganizationListView
+from ..views.organizations import OrganizationOnboardView, OrganizationOnboardDetailView
 
 urlpatterns = [
     path(
     "",
-    OrganizationListView.as_view()
+    OrganizationOnboardView.as_view()
+    ),
+    path(
+        "/<uuid:onboard_uid>",
+        OrganizationOnboardDetailView.as_view()
     ),
 ]

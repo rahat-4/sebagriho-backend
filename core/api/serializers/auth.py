@@ -13,7 +13,7 @@ User = get_user_model()
 
 
 class MeSerializer(serializers.ModelSerializer):
-    organization_uid = serializers.SerializerMethodField()
+    organization_slug = serializers.SerializerMethodField()
     name = serializers.CharField(source="get_full_name", read_only=True)
 
     class Meta:
@@ -33,21 +33,14 @@ class MeSerializer(serializers.ModelSerializer):
             "is_admin",
             "is_owner",
             "is_password_set",
-            "organization_uid",
+            "organization_slug",
         ]
 
-    def get_organization_uid(self, obj):
-        filters = {"user": obj}
-
-        if obj.is_owner:
-            filters["organization__parent__isnull"] = True
-
-        return (
-            OrganizationMember.objects
-            .filter(**filters)
-            .values_list("organization__uid", flat=True)
-            .first()
-        )
+    def get_organization_slug(self, obj):
+        organization_member = OrganizationMember.objects.filter(user=obj).first()
+        if organization_member:
+            return organization_member.organization.slug
+        return None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

@@ -1,47 +1,59 @@
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 from common.permissions import IsAdmin, IsOrganizationOwner
 
-from apps.organizations.models import Organization
+from apps.organizations.models import OrganizationMember
 
-from ..serializers.organizations import OrganizationOnboardingSerializer, OrganizationSerializer
+from ..serializers.organizations import OrganizationOnboardingSerializer, OrganizationMemberSerializer, OrganizationMemberUpdateSerializer
 
 
 
-class OrganizationListView(ListCreateAPIView):
-    permission_classes = [IsAdmin | IsOrganizationOwner]
-
+class OrganizationOnboardView(ListCreateAPIView):
+    permission_classes = [IsAdmin]
+    
     def get_serializer_class(self):
         if self.request.method == "POST":
             return OrganizationOnboardingSerializer
 
-        return OrganizationSerializer
+        return OrganizationMemberSerializer
 
     def get_queryset(self):
-        user = self.request.user
-
-        # Admin: see all child organizations
-        if user.is_admin:
-            return (
-                Organization.objects
-                .filter(parent__isnull=False)
-                .select_related("parent")
-            )
-
-        # Organization owner: see their child organizations
-        owner_membership = (
-            user.organization_members
+        return (
+            OrganizationMember.objects
             .filter(
-                organization__parent__isnull=True,
-                roles__is_owner=True,
+                organization__parent__isnull=False,
             )
-            .select_related("organization")
-            .first()
+            .select_related(
+                "user",
+                "organization",
+                "organization__parent",
+            )
+            .prefetch_related(
+                "roles",
+            )
         )
 
-        if not owner_membership:
-            return Organization.objects.none()
+class OrganizationOnboardDetailView(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdmin]
+    lookup_field = "uid"
+    lookup_url_kwarg = "onboard_uid"
 
-        return Organization.objects.filter(
-            parent=owner_membership.organization
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return OrganizationMemberUpdateSerializer
+
+        return OrganizationMemberSerializer
+
+    def get_queryset(self):
+        return (
+            OrganizationMember.objects
+            .filter(
+                organization__parent__isnull=False,
+            )
+            .select_related(
+                "user",
+                "organization",
+                "organization__parent",
+            )
+            .prefetch_related("roles")
         )

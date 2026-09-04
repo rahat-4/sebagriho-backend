@@ -7,7 +7,7 @@ from apps.organizations.models import Organization, OrganizationMember, Organiza
 
 User = get_user_model()
 
-class UserSlimSerializer(serializers.ModelSerializer):
+class UserOnboardingSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
@@ -26,15 +26,13 @@ class UserSlimSerializer(serializers.ModelSerializer):
         ]
 
 
-
-class OrganizationSlimSerializers(serializers.ModelSerializer):
+class OrganizationOnboardingDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = [
-            "uid",
-            "slug",
             "name",
-            "parent",
+            "title",
+            "subdomain",
             "logo",
             "organization_type",
             "description",
@@ -48,85 +46,91 @@ class OrganizationSlimSerializers(serializers.ModelSerializer):
             "linkedin",
             "instagram",
             "youtube",
-            "created_at",
-            "updated_at",
         ]
 
+
+class OrganizationMemberSerializer(serializers.ModelSerializer):
+    user = UserOnboardingSerializer(read_only=True)
+    organization = OrganizationOnboardingDataSerializer(read_only=True)
+
+    class Meta:
+        model = OrganizationMember
+        fields = [
+            "uid",
+            "user",
+            "organization",
+            "status",
+            "joined_at",
+        ]
+
+
 class OrganizationOnboardingSerializer(serializers.Serializer):
-    user = UserSlimSerializer()
-    organization = OrganizationSlimSerializers()
+    user = UserOnboardingSerializer()
+    organization = OrganizationOnboardingDataSerializer()
 
     @transaction.atomic
     def create(self, validated_data):
-        user_data = validated_data.pop("user")
-        organization_data = validated_data.pop("organization")
+        user_data = validated_data["user"]
+        organization_data = validated_data["organization"]
 
-        # 1. Create User
+        # 1. Create user
         user = User.objects.create_user(
             password="Test123pass",
             is_owner=True,
             **user_data,
         )
 
-        # 2. Create Organization
-        parent_organization_name = f"{user_data.get('first_name', '')} {user_data.get('last_name', '')} Organization"
+        # 2. Create parent organization
+        first_name = user_data.get("first_name") or ""
+        last_name = user_data.get("last_name") or ""
+
         parent_organization = Organization.objects.create(
-            name=parent_organization_name,
+            name=f"{first_name} {last_name} Organization".strip()
         )
 
-        organization_data = {
+        # 3. Create child organization
+        organization = Organization.objects.create(
+            parent=parent_organization,
             **organization_data,
-            "parent": parent_organization,
-        }
+        )
 
-        organization = Organization.objects.create(**organization_data)
-
-        # 3. Create Owner Role
+        # 4. Create owner roles
         parent_owner_role = OrganizationRole.objects.create(
             name="Owner",
             organization=parent_organization,
             is_owner=True,
         )
+
         owner_role = OrganizationRole.objects.create(
             name="Owner",
             organization=organization,
             is_owner=True,
         )
 
-        # 4. Create Organization Member
-        parent_organization_member = OrganizationMember.objects.create(
+        # 5. Create memberships
+        parent_member = OrganizationMember.objects.create(
             user=user,
             organization=parent_organization,
         )
+
         member = OrganizationMember.objects.create(
             user=user,
             organization=organization,
         )
 
-        # 5. Assign Owner Role
+        # 6. Assign roles
+        parent_member.roles.add(parent_owner_role)
         member.roles.add(owner_role)
-        parent_organization_member.roles.add(parent_owner_role)
 
-        # # 6. Create default appearance
-        # Appearance.objects.create(
-        #     organization=organization,
-        # )
+        return member
 
-        return {
-            "user": user,
-            "organization": organization,
-            "member": member,
-        }
-
-
-class OrganizationSerializer(serializers.ModelSerializer):
+class OrganizationUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = [
-            "uid",
-            "slug",
             "name",
-            "parent",
+            "title",
+            "subdomain",
             "logo",
             "organization_type",
             "description",
@@ -140,6 +144,34 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "linkedin",
             "instagram",
             "youtube",
-            "created_at",
-            "updated_at",
         ]
+
+
+class OrganizationMemberUpdateSerializer(serializers.ModelSerializer):
+    organization = OrganizationUpdateSerializer()
+
+    class Meta:
+        model = OrganizationMember
+        fields = [
+            "organization",
+            "status",
+        ]
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        organization_data = validated_data.pop("organization", None)
+
+        if organization_data:
+            organization = instance.organization
+
+            for field, value in organization_data.items():
+                setattr(organization, field, value)
+
+            organization.save()
+
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+
+        instance.save()
+
+        return instance
