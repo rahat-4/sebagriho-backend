@@ -7,6 +7,7 @@ from apps.organizations.models import Organization, OrganizationMember, Organiza
 
 User = get_user_model()
 
+
 class UserOnboardingSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -124,6 +125,7 @@ class OrganizationOnboardingSerializer(serializers.Serializer):
 
         return member
 
+
 class OrganizationUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
@@ -176,6 +178,7 @@ class OrganizationMemberUpdateSerializer(serializers.ModelSerializer):
 
         return instance
 
+
 class OrganizationProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
@@ -198,7 +201,6 @@ class OrganizationProfileSerializer(serializers.ModelSerializer):
             "linkedin",
             "instagram",
             "youtube",
-            "parent_uid",
             "created_at",
             "updated_at",
         ]

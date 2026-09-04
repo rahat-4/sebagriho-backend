@@ -1,16 +1,24 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 
 from common.permissions import IsAdmin, IsOrganizationOwner
 
 from apps.organizations.models import Organization, OrganizationMember
 
-from ..serializers.organizations import OrganizationOnboardingSerializer, OrganizationMemberSerializer, OrganizationMemberUpdateSerializer, OrganizationProfileSerializer
-
+from ..serializers.organizations import (
+    OrganizationOnboardingSerializer,
+    OrganizationMemberSerializer,
+    OrganizationMemberUpdateSerializer,
+    OrganizationProfileSerializer,
+)
 
 
 class OrganizationOnboardView(ListCreateAPIView):
     permission_classes = [IsAdmin]
-    
+
     def get_serializer_class(self):
         if self.request.method == "POST":
             return OrganizationOnboardingSerializer
@@ -19,8 +27,7 @@ class OrganizationOnboardView(ListCreateAPIView):
 
     def get_queryset(self):
         return (
-            OrganizationMember.objects
-            .filter(
+            OrganizationMember.objects.filter(
                 organization__parent__isnull=False,
             )
             .select_related(
@@ -32,6 +39,7 @@ class OrganizationOnboardView(ListCreateAPIView):
                 "roles",
             )
         )
+
 
 class OrganizationOnboardDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdmin]
@@ -46,8 +54,7 @@ class OrganizationOnboardDetailView(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return (
-            OrganizationMember.objects
-            .filter(
+            OrganizationMember.objects.filter(
                 organization__parent__isnull=False,
             )
             .select_related(
