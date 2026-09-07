@@ -60,7 +60,7 @@ class Organization(BaseModelWithUid):
     )
     description = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
-    phone = PhoneNumberField(unique=True, blank=True, null=True)
+    phone = PhoneNumberField(blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     facebook = models.URLField(blank=True, null=True)

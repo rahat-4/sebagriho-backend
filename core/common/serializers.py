@@ -1,19 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.conf import settings
 
 from rest_framework import serializers
 
-from apps.doctors.models import (
-    Achievement,
-    Affiliation,
-    Degree,
-    Department,
-    Doctor,
-    Specialty,
-    LanguageSpoken,
-)
+from apps.organizations.models import Organization
 
-from apps.organizations.models import Organization, OrganizationMember
+from .models import Attachment
 
 User = get_user_model()
 
@@ -42,51 +33,38 @@ class UserSlimSerializer(serializers.ModelSerializer):
         ]
 
 
-class DegreeSlimSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Degree
-        fields = ["uid", "name", "institute", "result", "passing_year", "country"]
-
-
-class DepartmentSlimSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Department
-        fields = ["uid", "name", "description"]
-
-
-class SpecialtySlimSerializer(serializers.ModelSerializer):
-    department = DepartmentSlimSerializer()
+class AttachmentSimSerializer(serializers.ModelSerializer):
+    file = serializers.SerializerMethodField()
 
     class Meta:
-        model = Specialty
-        fields = ["uid", "name", "department"]
+        model = Attachment
+        fields = [
+            "uid",
+            "file",
+            "name",
+            "description",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "uid",
+            "file",
+            "created_at",
+            "updated_at",
+        ]
 
+    def get_file(self, obj):
+        request = self.context.get("request")
 
-class AchievementSlimSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Achievement
-        fields = ["uid", "name", "source", "year"]
+        if not obj.file:
+            return None
 
+        url = obj.file.url
 
-class AffiliationSlimSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Affiliation
-        fields = ["uid", "title", "hospital_name", "status"]
+        if request:
+            return request.build_absolute_uri(url)
 
-
-class LanguageSpokenSlimSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LanguageSpoken
-        fields = ["uid", "language"]
-
-
-class DoctorSlimSerializer(serializers.ModelSerializer):
-    user = UserSlimSerializer()
-    department = DepartmentSlimSerializer()
-
-    class Meta:
-        model = Doctor
-        fields = ["user", "about", "department", "experience"]
+        return url
 
 
 class OrganizationSlimSerializer(serializers.ModelSerializer):

@@ -36,7 +36,7 @@ class AdminOrganizationOnboardListView(ListCreateAPIView):
             .prefetch_related(
                 "roles",
             )
-        )
+        ).order_by("-created_at")
 
 
 class AdminOrganizationOnboardDetailView(RetrieveUpdateDestroyAPIView):

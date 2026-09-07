@@ -69,6 +69,25 @@ class AdminOrganizationOnboardingSerializer(serializers.Serializer):
     user = AdminUserOnboardingSerializer()
     organization = AdminOrganizationOnboardingDataSerializer()
 
+    def validate(self, attrs):
+        user_data = attrs.get("user", {})
+
+        phone = user_data.get("phone")
+        email = user_data.get("email")
+
+        errors = {}
+
+        if phone and User.objects.filter(phone=phone).exists():
+            errors["phone"] = "A user with this phone number already exists."
+
+        if email and User.objects.filter(email__iexact=email).exists():
+            errors["email"] = "A user with this email address already exists."
+
+        if errors:
+            raise serializers.ValidationError({"user": errors})
+
+        return attrs
+
     @transaction.atomic
     def create(self, validated_data):
         user_data = validated_data["user"]

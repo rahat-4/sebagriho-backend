@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericRelation
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
 
@@ -8,7 +9,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from apps.organizations.models import Organization
 
-from common.models import BaseModelWithUid
+from common.models import BaseModelWithUid, Attachment
 from common.utils import unique_number_generator
 
 from .choices import (
@@ -24,7 +25,6 @@ from .utils import (
     get_appointment_file_path,
     get_patient_file_path,
 )
-
 
 User = get_user_model()
 
@@ -46,11 +46,9 @@ class HomeopathicPatient(BaseModelWithUid):
     )
     case_history = models.TextField(blank=True, null=True)
     habits = models.TextField(blank=True, null=True)
-    patient_file = models.FileField(
-        upload_to=get_patient_file_path,
-        blank=True,
-        null=True,
-        help_text="Upload any relevant file for the patient",
+    attachments = GenericRelation(
+        Attachment,
+        related_query_name="homeopathic_patient_attachments",
     )
 
     # FK
@@ -82,6 +80,11 @@ class HomeopathicAppointment(BaseModelWithUid):
         choices=HomeopathicAppointmentStatus.choices,
         default=HomeopathicAppointmentStatus.ACTIVE,
     )
+    attachments = GenericRelation(
+        Attachment,
+        related_query_name="homeopathic_appointment_attachments",
+    )
+
     homeopathic_patient = models.ForeignKey(
         HomeopathicPatient,
         on_delete=models.CASCADE,
@@ -126,6 +129,12 @@ class HomeopathicMedicine(BaseModelWithUid):
         choices=HomeopathicMedicineStatus.choices,
         default=HomeopathicMedicineStatus.AVAILABLE,
     )
+
+    attachments = GenericRelation(
+        Attachment,
+        related_query_name="homeopathic_medicine_attachments",
+    )
+
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
