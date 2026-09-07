@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -62,3 +64,10 @@ class AdminOrganizationOnboardDetailView(RetrieveUpdateDestroyAPIView):
             )
             .prefetch_related("roles")
         )
+
+    def perform_destroy(self, instance):
+        with transaction.atomic():
+            instance.user.delete()  # Delete the user associated with the organization member
+            instance.organization.delete()  # Delete the organization associated with the organization member
+            instance.organization.parent.delete()  # Delete the parent organization associated with the organization member
+            instance.roles.clear()  # Clear the roles associated with the organization member
