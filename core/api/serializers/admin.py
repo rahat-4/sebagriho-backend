@@ -8,6 +8,15 @@ from apps.organizations.models import Organization, OrganizationMember, Organiza
 User = get_user_model()
 
 
+RESERVED_SUBDOMAINS = {
+    "admin",
+    "www",
+    "api",
+    "mail",
+    "ftp",
+}
+
+
 class AdminUserOnboardingSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -48,6 +57,14 @@ class AdminOrganizationOnboardingDataSerializer(serializers.ModelSerializer):
             "instagram",
             "youtube",
         ]
+
+    def validate_subdomain(self, value):
+        value = value.strip().lower()
+
+        if value in RESERVED_SUBDOMAINS:
+            raise serializers.ValidationError("This subdomain is reserved.")
+
+        return value
 
 
 class AdminOrganizationMemberSerializer(serializers.ModelSerializer):

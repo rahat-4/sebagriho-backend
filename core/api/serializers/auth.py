@@ -11,7 +11,6 @@ User = get_user_model()
 
 
 class MeSerializer(serializers.ModelSerializer):
-    organization_slug = serializers.SerializerMethodField()
     organization_type = serializers.SerializerMethodField()
     name = serializers.CharField(
         source="get_full_name",
@@ -37,7 +36,6 @@ class MeSerializer(serializers.ModelSerializer):
             "is_admin",
             "is_owner",
             "is_password_set",
-            "organization_slug",
             "organization_type",
         ]
         read_only_fields = [
@@ -48,23 +46,14 @@ class MeSerializer(serializers.ModelSerializer):
             "is_admin",
             "is_owner",
             "is_password_set",
-            "organization_slug",
             "organization_type",
         ]
 
-    def get_organization_slug(self, obj):
-        return (
-            OrganizationMember.objects.filter(user=obj)
-            .values_list("organization__slug", flat=True)
-            .first()
-        )
-
     def get_organization_type(self, obj):
-        return (
-            OrganizationMember.objects.filter(user=obj)
-            .values_list("organization__organization_type", flat=True)
-            .first()
-        )
+        organization = self.context.get("request").organization
+        if organization:
+            return organization.organization_type
+        return None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

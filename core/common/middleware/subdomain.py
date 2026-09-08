@@ -8,15 +8,48 @@ class SubdomainMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        subdomain = request.headers.get("X-ORGANIZATION-SUBDOMAIN", "")
+        path = request.path
+        subdomain = request.headers.get("X-ORGANIZATION-SUBDOMAIN", "").strip().lower()
 
-        if subdomain:
-            try:
-                organization = Organization.objects.get(subdomain=subdomain)
-                request.organization = organization
-                request.subdomain = subdomain
-            except Organization.DoesNotExist:
-                return JsonResponse({"error": "Organization not found"}, status=404)
+        # --------------------------------
+        # Platform admin
+        # --------------------------------
+        if subdomain == "admin":
+            request.is_platform = True
+            request.organization = None
+            request.subdomain = subdomain
 
-        response = self.get_response(request)
-        return response
+            return self.get_response(request)
+
+        # --------------------------------
+        # Super admin API
+        # --------------------------------
+        if path.startswith("/super-admin/"):
+            request.is_platform = True
+            request.organization = None
+            request.subdomain = subdomain
+
+            return self.get_response(request)
+
+        # --------------------------------
+        # Organization subdomain required
+        # --------------------------------
+        if not subdomain:
+            return JsonResponse(
+                {"error": "Organization subdomain is required"},
+                status=400,
+            )
+
+        try:
+            organization = Organization.objects.get(subdomain=subdomain)
+        except Organization.DoesNotExist:
+            return JsonResponse(
+                {"error": "Organization not found"},
+                status=404,
+            )
+
+        request.is_platform = False
+        request.organization = organization
+        request.subdomain = subdomain
+
+        return self.get_response(request)

@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.authentication.models import RegistrationSession
+from apps.organizations.models import OrganizationMember, PlatformStaff
 
 from ..serializers.auth import (
     ForgotPasswordSerializer,
@@ -25,9 +26,6 @@ from ..serializers.auth import (
 )
 
 User = get_user_model()
-
-
-
 
 
 class PhoneVerificationView(APIView):
@@ -60,8 +58,6 @@ class PhoneVerificationView(APIView):
         return Response(response, status=http_status)
 
 
-
-
 class ForgotPasswordView(CreateAPIView):
     serializer_class = ForgotPasswordSerializer
     permission_classes = [AllowAny]
@@ -83,7 +79,9 @@ class ForgotPasswordView(CreateAPIView):
 
 class ResetPasswordView(APIView):
     def post(self, request):
-        serializer = ResetPasswordSerializer(data=request.data, context={"request": request})
+        serializer = ResetPasswordSerializer(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid():
             user = serializer.save()
             return Response(
@@ -95,6 +93,7 @@ class ResetPasswordView(APIView):
                 status=status.HTTP_200_OK,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class OtpVerificationView(APIView):
     permission_classes = [AllowAny]
@@ -111,7 +110,8 @@ class OtpVerificationView(APIView):
                 status=status.HTTP_200_OK,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class MeView(RetrieveUpdateAPIView):
     serializer_class = MeSerializer
     permission_classes = [IsAuthenticated]
@@ -119,8 +119,12 @@ class MeView(RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user
 
+
 class LoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
+        is_platform = getattr(request, "is_platform", False)
+        organization = getattr(request, "organization", None)
+
         serializer = self.get_serializer(data=request.data)
 
         try:
@@ -128,11 +132,58 @@ class LoginView(TokenObtainPairView):
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        data = serializer.validated_data
         user = serializer.user
+
+        # --------------------------------
+        # Platform login
+        # --------------------------------
+        if is_platform:
+            if not PlatformStaff.objects.filter(
+                user=user,
+                user__is_active=True,
+                is_active=True,
+            ).exists():
+                return Response(
+                    {
+                        "error": (
+                            "You do not have access to the " "administration portal"
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        # --------------------------------
+        # Organization login
+        # --------------------------------
+        else:
+            if not organization:
+                return Response(
+                    {"error": ("Organization subdomain is required")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if not OrganizationMember.objects.filter(
+                user=user,
+                organization=organization,
+                user__is_active=True,
+            ).exists():
+                return Response(
+                    {"error": ("You do not have access to this " "organization")},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        data = serializer.validated_data
 
         data["admin"] = user.is_admin
         data["user_name"] = user.get_full_name()
+        data["is_platform"] = is_platform
+
+        if organization:
+            data["organization"] = {
+                "id": str(organization.uid),
+                "name": organization.name,
+                "subdomain": organization.subdomain,
+            }
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -177,8 +228,6 @@ class SetPasswordView(GenericAPIView):
         serializer.save()
 
         return Response(
-            {
-                "message": "Password set successfully."
-            },
+            {"message": "Password set successfully."},
             status=status.HTTP_200_OK,
         )

@@ -90,8 +90,8 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
         user_data = validated_data.pop("user")
         files = validated_data.pop("upload_files", [])
 
-        organization = self.context["organization"]
         request = self.context["request"]
+        organization = request.organization
 
         user = User.objects.create_user(**user_data)
 
@@ -210,7 +210,8 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        organization = self.context["organization"]
+        request = self.context["request"]
+        organization = request.organization
 
         # Patient
         patient_uid = attrs.pop("patient_uid", None)
@@ -266,7 +267,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         medicines = validated_data.pop("_medicines", None)
         upload_files = validated_data.pop("upload_files", [])
 
-        organization = self.context["organization"]
+        organization = self.context["request"].organization
 
         appointment = HomeopathicAppointment.objects.create(
             organization=organization,
@@ -367,7 +368,8 @@ class HomeopathicMedicineSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         upload_files = validated_data.pop("upload_files", [])
 
-        organization = self.context["organization"]
+        request = self.context["request"]
+        organization = request.organization
 
         medicine = HomeopathicMedicine.objects.create(
             organization=organization,
