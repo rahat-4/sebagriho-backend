@@ -69,15 +69,6 @@ class Organization(BaseModelWithUid):
     instagram = models.URLField(blank=True, null=True)
     youtube = models.URLField(blank=True, null=True)
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["phone"],
-                name="unique_non_null_phone",
-                condition=~models.Q(phone=None),
-            )
-        ]
-
     def __str__(self):
         return f"{self.name} (Slug: {self.slug}) (UID: {self.uid})"
 

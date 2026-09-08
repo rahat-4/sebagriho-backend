@@ -101,25 +101,24 @@ class AdminOrganizationOnboardingSerializer(serializers.Serializer):
         )
 
         # 2. Create parent organization
-        first_name = user_data.get("first_name") or ""
-        last_name = user_data.get("last_name") or ""
+        # first_name = user_data.get("first_name") or ""
+        # last_name = user_data.get("last_name") or ""
 
-        parent_organization = Organization.objects.create(
-            name=f"{first_name} {last_name} Organization".strip()
-        )
+        # parent_organization = Organization.objects.create(
+        #     name=f"{first_name} {last_name} Organization".strip()
+        # )
 
         # 3. Create child organization
         organization = Organization.objects.create(
-            parent=parent_organization,
             **organization_data,
         )
 
         # 4. Create owner roles
-        parent_owner_role = OrganizationRole.objects.create(
-            name="Owner",
-            organization=parent_organization,
-            is_owner=True,
-        )
+        # parent_owner_role = OrganizationRole.objects.create(
+        #     name="Owner",
+        #     organization=parent_organization,
+        #     is_owner=True,
+        # )
 
         owner_role = OrganizationRole.objects.create(
             name="Owner",
@@ -128,10 +127,10 @@ class AdminOrganizationOnboardingSerializer(serializers.Serializer):
         )
 
         # 5. Create memberships
-        parent_member = OrganizationMember.objects.create(
-            user=user,
-            organization=parent_organization,
-        )
+        # parent_member = OrganizationMember.objects.create(
+        #     user=user,
+        #     organization=parent_organization,
+        # )
 
         member = OrganizationMember.objects.create(
             user=user,
@@ -139,7 +138,7 @@ class AdminOrganizationOnboardingSerializer(serializers.Serializer):
         )
 
         # 6. Assign roles
-        parent_member.roles.add(parent_owner_role)
+        # parent_member.roles.add(parent_owner_role)
         member.roles.add(owner_role)
 
         return member

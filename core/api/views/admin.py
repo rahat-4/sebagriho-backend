@@ -27,13 +27,10 @@ class AdminOrganizationOnboardListView(ListCreateAPIView):
 
     def get_queryset(self):
         return (
-            OrganizationMember.objects.filter(
-                organization__parent__isnull=False,
-            )
+            OrganizationMember.objects.filter()
             .select_related(
                 "user",
                 "organization",
-                "organization__parent",
             )
             .prefetch_related(
                 "roles",
@@ -54,13 +51,10 @@ class AdminOrganizationOnboardDetailView(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return (
-            OrganizationMember.objects.filter(
-                organization__parent__isnull=False,
-            )
+            OrganizationMember.objects.filter()
             .select_related(
                 "user",
                 "organization",
-                "organization__parent",
             )
             .prefetch_related("roles")
         )

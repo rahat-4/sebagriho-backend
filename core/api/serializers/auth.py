@@ -7,13 +7,12 @@ from django.contrib.auth import get_user_model
 from apps.authentication.models import RegistrationSession
 from apps.organizations.models import OrganizationMember
 
-
 User = get_user_model()
-
 
 
 class MeSerializer(serializers.ModelSerializer):
     organization_slug = serializers.SerializerMethodField()
+    organization_type = serializers.SerializerMethodField()
     name = serializers.CharField(
         source="get_full_name",
         read_only=True,
@@ -39,6 +38,7 @@ class MeSerializer(serializers.ModelSerializer):
             "is_owner",
             "is_password_set",
             "organization_slug",
+            "organization_type",
         ]
         read_only_fields = [
             "uid",
@@ -49,13 +49,20 @@ class MeSerializer(serializers.ModelSerializer):
             "is_owner",
             "is_password_set",
             "organization_slug",
+            "organization_type",
         ]
 
     def get_organization_slug(self, obj):
         return (
-            OrganizationMember.objects
-            .filter(user=obj)
+            OrganizationMember.objects.filter(user=obj)
             .values_list("organization__slug", flat=True)
+            .first()
+        )
+
+    def get_organization_type(self, obj):
+        return (
+            OrganizationMember.objects.filter(user=obj)
+            .values_list("organization__organization_type", flat=True)
             .first()
         )
 
@@ -64,18 +71,13 @@ class MeSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
 
         def make_absolute(uri):
-            return (
-                request.build_absolute_uri(uri)
-                if uri and request
-                else uri
-            )
+            return request.build_absolute_uri(uri) if uri and request else uri
 
         for field in ["avatar", "nid_front", "nid_back"]:
-            representation[field] = make_absolute(
-                representation.get(field)
-            )
+            representation[field] = make_absolute(representation.get(field))
 
         return representation
+
 
 class OtpVerificationSerializer(serializers.Serializer):
     session_id = serializers.UUIDField(required=True)
@@ -99,7 +101,6 @@ class OtpVerificationSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {"otp": "OTP expired. Please request a new one."}
             )
-
 
         if session.otp != otp:
             raise serializers.ValidationError({"otp": "Invalid OTP. Please try again."})
@@ -211,9 +212,9 @@ class SetPasswordSerializer(serializers.Serializer):
         password_confirm = attrs["password_confirm"]
 
         if password != password_confirm:
-            raise serializers.ValidationError({
-                "password_confirm": "Passwords do not match."
-            })
+            raise serializers.ValidationError(
+                {"password_confirm": "Passwords do not match."}
+            )
 
         user = self.context["user"]
 
