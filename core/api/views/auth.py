@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.authentication.models import RegistrationSession
-from apps.organizations.models import OrganizationMember, PlatformStaff
+from apps.organizations.models import OrganizationMember
 
 from ..serializers.auth import (
     ForgotPasswordSerializer,
@@ -138,11 +138,7 @@ class LoginView(TokenObtainPairView):
         # Platform login
         # --------------------------------
         if is_platform:
-            if not PlatformStaff.objects.filter(
-                user=user,
-                user__is_active=True,
-                is_active=True,
-            ).exists():
+            if not user.is_admin:
                 return Response(
                     {
                         "error": (

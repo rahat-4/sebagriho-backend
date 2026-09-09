@@ -69,12 +69,6 @@ class HomeopathicAppointment(BaseModelWithUid):
     slug = AutoSlugField(unique=True, populate_from=get_homeopathic_appointment_slug)
     symptoms = models.TextField(blank=True, null=True)
     treatment_effectiveness = models.TextField(blank=True, null=True)
-    appointment_file = models.FileField(
-        upload_to=get_appointment_file_path,
-        blank=True,
-        null=True,
-        help_text="Upload any relevant file for the appointment",
-    )
     status = models.CharField(
         max_length=20,
         choices=HomeopathicAppointmentStatus.choices,

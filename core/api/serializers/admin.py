@@ -34,6 +34,28 @@ class AdminUserOnboardingSerializer(serializers.ModelSerializer):
             "blood_group",
             "date_of_birth",
         ]
+        read_only_fields = ["uid"]
+
+    def validate_phone(self, value):
+        if User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError(
+                "A user with this phone number already exists."
+            )
+
+        return value
+
+    def validate_email(self, value):
+        if not value:
+            return None
+
+        value = value.strip().lower()
+
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError(
+                "A user with this email address already exists."
+            )
+
+        return value
 
 
 class AdminOrganizationOnboardingDataSerializer(serializers.ModelSerializer):
@@ -64,6 +86,9 @@ class AdminOrganizationOnboardingDataSerializer(serializers.ModelSerializer):
         if value in RESERVED_SUBDOMAINS:
             raise serializers.ValidationError("This subdomain is reserved.")
 
+        if Organization.objects.filter(subdomain__iexact=value).exists():
+            raise serializers.ValidationError("This subdomain is already in use.")
+
         return value
 
 
@@ -85,25 +110,6 @@ class AdminOrganizationMemberSerializer(serializers.ModelSerializer):
 class AdminOrganizationOnboardingSerializer(serializers.Serializer):
     user = AdminUserOnboardingSerializer()
     organization = AdminOrganizationOnboardingDataSerializer()
-
-    def validate(self, attrs):
-        user_data = attrs.get("user", {})
-
-        phone = user_data.get("phone")
-        email = user_data.get("email")
-
-        errors = {}
-
-        if phone and User.objects.filter(phone=phone).exists():
-            errors["phone"] = "A user with this phone number already exists."
-
-        if email and User.objects.filter(email__iexact=email).exists():
-            errors["email"] = "A user with this email address already exists."
-
-        if errors:
-            raise serializers.ValidationError({"user": errors})
-
-        return attrs
 
     @transaction.atomic
     def create(self, validated_data):

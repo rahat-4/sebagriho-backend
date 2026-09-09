@@ -4,10 +4,8 @@ from .models import (
     Organization,
     OrganizationMember,
     OrganizationRole,
-    PlatformStaff,
 )
 
-admin.site.register(PlatformStaff)
 admin.site.register(OrganizationMember)
 admin.site.register(OrganizationRole)
 

@@ -26,26 +26,6 @@ from .utils import (
 
 User = get_user_model()
 
-RESERVED_SUBDOMAINS = {
-    "admin",
-    "www",
-    "api",
-    "mail",
-    "ftp",
-}
-
-
-class PlatformStaff(models.Model):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name="platform_staff",
-    )
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.user.get_full_name()
-
 
 class Organization(BaseModelWithUid):
     parent = models.ForeignKey(
@@ -86,27 +66,6 @@ class Organization(BaseModelWithUid):
     twitter = models.URLField(blank=True, null=True)
     instagram = models.URLField(blank=True, null=True)
     youtube = models.URLField(blank=True, null=True)
-
-    def clean(self):
-        super().clean()
-
-        if self.subdomain:
-            subdomain = self.subdomain.strip().lower()
-
-            if subdomain in RESERVED_SUBDOMAINS:
-                raise ValidationError(
-                    {
-                        "subdomain": _(
-                            f"'{subdomain}' is a reserved subdomain "
-                            "and cannot be used by an organization."
-                        )
-                    }
-                )
-
-    def save(self, *args, **kwargs):
-        self.subdomain = self.subdomain.strip().lower()
-        self.full_clean()
-        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} " f"(Slug: {self.slug}) " f"(UID: {self.uid})"

@@ -1,5 +1,3 @@
-from django.shortcuts import get_object_or_404
-
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 from apps.homeopathy.models import (
@@ -7,7 +5,6 @@ from apps.homeopathy.models import (
     HomeopathicMedicine,
     HomeopathicAppointment,
 )
-from apps.organizations.models import Organization
 
 from common.permissions import IsOrganizationOwner
 
@@ -21,11 +18,24 @@ from ..serializers.homeopathy import (
 class HomeopathicPatientListCreateView(ListCreateAPIView):
     serializer_class = HomeopathicPatientSerializer
     permission_classes = [IsOrganizationOwner]
+    filterset_fields = ["status", "miasm_type"]
+    search_fields = [
+        "user__first_name",
+        "user__last_name",
+        "user__phone",
+        "user__email",
+        "serial_number",
+        "old_serial_number",
+        "relative_phone",
+        "age",
+    ]
 
     def get_queryset(self):
+        organization = getattr(self.request, "organization", None)
+
         return (
             HomeopathicPatient.objects.filter(
-                organization=self.request.organization,
+                organization=organization,
             )
             .select_related("user")
             .order_by("-created_at")
@@ -42,19 +52,34 @@ class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = "patient_uid"
 
     def get_queryset(self):
+        organization = getattr(self.request, "organization", None)
+
         return HomeopathicPatient.objects.filter(
-            organization=self.request.organization,
+            organization=organization,
         ).select_related("user")
 
 
 class HomeopathicAppointmentListCreateView(ListCreateAPIView):
     permission_classes = [IsOrganizationOwner]
     serializer_class = HomeopathicAppointmentSerializer
+    filterset_fields = ["status", "homeopathic_patient__miasm_type"]
+    search_fields = [
+        "symptoms",
+        "homeopathic_patient__user__first_name",
+        "homeopathic_patient__user__last_name",
+        "homeopathic_patient__user__phone",
+        "homeopathic_patient__user__email",
+        "homeopathic_patient__serial_number",
+        "homeopathic_patient__old_serial_number",
+        "homeopathic_patient__relative_phone",
+        "homeopathic_patient__age",
+    ]
 
     def get_queryset(self):
+        organization = getattr(self.request, "organization", None)
         return (
             HomeopathicAppointment.objects.filter(
-                organization=self.request.organization,
+                organization=organization,
             )
             .select_related(
                 "homeopathic_patient",
@@ -76,9 +101,10 @@ class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = "appointment_uid"
 
     def get_queryset(self):
+        organization = getattr(self.request, "organization", None)
         return (
             HomeopathicAppointment.objects.filter(
-                organization=self.request.organization,
+                organization=organization,
             )
             .select_related(
                 "homeopathic_patient",
@@ -94,11 +120,18 @@ class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
 class HomeopathicMedicineListCreateView(ListCreateAPIView):
     serializer_class = HomeopathicMedicineSerializer
     permission_classes = [IsOrganizationOwner]
+    filterset_fields = {
+        "status": ["exact"],
+        "is_available": ["exact"],
+        "expiration_date": ["gte", "lte"],
+    }
+    search_fields = ["name", "manufacturer", "batch_number"]
 
     def get_queryset(self):
+        organization = getattr(self.request, "organization", None)
         return (
             HomeopathicMedicine.objects.filter(
-                organization=self.request.organization,
+                organization=organization,
             )
             .prefetch_related("attachments")
             .order_by("-created_at")
@@ -113,6 +146,8 @@ class HomeopathicMedicineDetailView(RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = "medicine_uid"
 
     def get_queryset(self):
+        organization = getattr(self.request, "organization", None)
+
         return HomeopathicMedicine.objects.filter(
-            organization=self.request.organization,
+            organization=organization,
         ).prefetch_related("attachments")

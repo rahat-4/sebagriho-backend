@@ -1,14 +1,29 @@
 import re
 from django.core.exceptions import ValidationError
 
+RESERVED_SUBDOMAINS = {
+    "admin",
+    "www",
+    "api",
+    "mail",
+    "ftp",
+}
+
 
 def validate_subdomain(value):
+    value = value.strip().lower()
+
+    if value in RESERVED_SUBDOMAINS:
+        raise ValidationError(f"'{value}' is a reserved subdomain and cannot be used.")
+
     if not re.match(r"^[a-z0-9-]+$", value):
         raise ValidationError(
             "Subdomain can only contain lowercase letters, numbers and hyphens."
         )
+
     if value.startswith("-") or value.endswith("-"):
         raise ValidationError("Subdomain cannot start or end with a hyphen.")
+
     if len(value) > 63:
         raise ValidationError("Subdomain must be at most 63 characters long.")
 

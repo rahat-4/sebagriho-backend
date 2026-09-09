@@ -18,6 +18,15 @@ from ..serializers.admin import (
 
 class AdminOrganizationOnboardListView(ListCreateAPIView):
     permission_classes = [IsAdmin]
+    filterset_fields = ["organization__organization_type", "organization__status"]
+    search_fields = [
+        "user__first_name",
+        "user__last_name",
+        "user__email",
+        "user__phone",
+        "organization__name",
+        "organization__subdomain",
+    ]
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -63,5 +72,4 @@ class AdminOrganizationOnboardDetailView(RetrieveUpdateDestroyAPIView):
         with transaction.atomic():
             instance.user.delete()  # Delete the user associated with the organization member
             instance.organization.delete()  # Delete the organization associated with the organization member
-            instance.organization.parent.delete()  # Delete the parent organization associated with the organization member
             instance.roles.clear()  # Clear the roles associated with the organization member

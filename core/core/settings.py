@@ -205,21 +205,18 @@ SIMPLE_JWT = {
 
 # # CORS settings
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://([a-zA-Z0-9-]+\.)?sebagriho\.com$",
+]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://api.sebagriho.com",
-    "https://api.sebagriho.com",
-    "https://sebagriho.com",
-    "https://www.sebagriho.com",
 ]
-CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
+CSRF_TRUSTED_ORIGINS = [
+    "https://sebagriho.com",
+    "https://*.sebagriho.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 CORS_ALLOW_HEADERS = [
     "accept",
@@ -234,12 +231,6 @@ CORS_ALLOW_HEADERS = [
     "x-organization-subdomain",
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://sebagriho.com",
-    "https://www.sebagriho.com",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
 
 # Add these settings for proper HTTPS detection behind nginx proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

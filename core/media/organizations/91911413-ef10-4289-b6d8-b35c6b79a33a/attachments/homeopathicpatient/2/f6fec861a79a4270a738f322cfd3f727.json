@@ -1,0 +1,722 @@
+{
+  "info": {
+    "_postman_id": "5b0d15a4-b027-4451-8b13-5789d115eba2",
+    "name": "Sebagriho",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "23797058",
+    "_collection_link": "https://go.postman.co/collection/23797058-5b0d15a4-b027-4451-8b13-5789d115eba2?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "phone",
+                  "value": "+8801521507316",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "Test123pass",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "+8801712345678",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "New123pass",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "refresh",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "refresh",
+                  "value": "{{json_web_token_01vp}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/refresh",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_1890}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "refresh_token",
+                  "value": "{{json_web_token_16ic}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/logout",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_18op}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"gender\": \"FEMALE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/me",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "set-password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_1ax9}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "password",
+                  "value": "New123pass",
+                  "type": "text"
+                },
+                {
+                  "key": "password_confirm",
+                  "value": "New123pass",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/set-password",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "set-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "reset-password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_1c43}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "old_password",
+                  "value": "New123pass",
+                  "type": "text"
+                },
+                {
+                  "key": "new_password",
+                  "value": "Test123pass",
+                  "type": "text"
+                },
+                {
+                  "key": "confirm_password",
+                  "value": "Test123pass",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/reset-password",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "item": [
+        {
+          "name": "profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_017r}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"afdsfasdf\",\r\n    \"parent\": null,\r\n    \"organization_type\": \"CHAMBER\",\r\n    \"description\": \"ABC Chamber of Commerce is a business organization.\",\r\n    \"status\": \"ACTIVE\",\r\n    \"email\": \"infsdfffasdfao@abcchamber.com\",\r\n    \"website\": \"https://abcchamber.com\",\r\n    \"address\": \"Dhaka, Bangladesh\",\r\n    \"facebook\": \"https://facebook.com/abcchamber\",\r\n    \"twitter\": \"https://twitter.com/abcchamber\",\r\n    \"linkedin\": \"https://linkedin.com/company/abcchamber\",\r\n    \"instagram\": \"https://instagram.com/abcchamber\",\r\n    \"youtube\": \"https://youtube.com/@abcchamber\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/organizations/abc-chamber-of-commerce/profile",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "organizations",
+                "abc-chamber-of-commerce",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{json_web_token_017r}}",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "onboard",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_0y01}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"user\": {\r\n    \"first_name\": \"ttt\",\r\n    \"last_name\": \"tt\",\r\n    \"phone\": \"+8801712342299\",\r\n    \"email\": \"mahb1@example.com\",\r\n    \"gender\": \"MALE\",\r\n    \"nid\": \"1234567890\",\r\n    \"blood_group\": \"O+\",\r\n    \"date_of_birth\": \"1995-05-15\"\r\n  },\r\n  \"organization\": {\r\n    \"name\": \"gsdg Co.\",\r\n    \"parent\": null,\r\n    \"organization_type\": \"CHAMBER\",\r\n    \"description\": \"ABC Chamber of Commerce is a business organization.\",\r\n    \"status\": \"ACTIVE\",\r\n    \"phone\": \"+8801716645655\",\r\n    \"email\": \"info@abcchamber.com\",\r\n    \"website\": \"https://abcchamber.com\",\r\n    \"address\": \"Dhaka, Bangladesh\",\r\n    \"facebook\": \"https://facebook.com/abcchamber\",\r\n    \"twitter\": \"https://twitter.com/abcchamber\",\r\n    \"linkedin\": \"https://linkedin.com/company/abcchamber\",\r\n    \"instagram\": \"https://instagram.com/abcchamber\",\r\n    \"youtube\": \"https://youtube.com/@abcchamber\"\r\n  }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/admin/organization-onboard",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "admin",
+                "organization-onboard"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "onboard-detail",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_0y01}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"user\": {\r\n    \"first_name\": \"Badhon\",\r\n    \"last_name\": \"Khan\",\r\n    \"phone\": \"+8801712885678\",\r\n    \"email\": \"mahbffffub@example.com\",\r\n    \"gender\": \"MALE\",\r\n    \"nid\": \"1234567890\",\r\n    \"blood_group\": \"O+\",\r\n    \"date_of_birth\": \"1995-05-15\"\r\n  },\r\n  \"organization\": {\r\n    \"name\": \"New Commerce\",\r\n    \"parent\": null,\r\n    \"organization_type\": \"CHAMBER\",\r\n    \"description\": \"ABC Chamber of Commerce is a business organization.\",\r\n    \"status\": \"PENDING\",\r\n    \"phone\": \"+8801711115679\",\r\n    \"email\": \"infsdffo@abcchamber.com\",\r\n    \"website\": \"https://abcchamber.com\",\r\n    \"address\": \"Dhaka, Bangladesh\",\r\n    \"facebook\": \"https://facebook.com/abcchamber\",\r\n    \"twitter\": \"https://twitter.com/abcchamber\",\r\n    \"linkedin\": \"https://linkedin.com/company/abcchamber\",\r\n    \"instagram\": \"https://instagram.com/abcchamber\",\r\n    \"youtube\": \"https://youtube.com/@abcchamber\"\r\n  }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/admin/organization-onboard/c5ea3bc4-93cb-4aad-8ebf-d2a6f3c9a989",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "admin",
+                "organization-onboard",
+                "c5ea3bc4-93cb-4aad-8ebf-d2a6f3c9a989"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Homeopathy",
+      "item": [
+        {
+          "name": "patient-list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"user\": {\r\n        \"first_name\": \"John\",\r\n        \"last_name\": \"Doe\",\r\n        \"phone\": \"+8801712225678\",\r\n        \"email\": \"john@example.com\",\r\n        \"gender\": \"MALE\",\r\n        \"date_of_birth\": \"1994-05-20\"\r\n    },\r\n    \"status\": \"ACTIVE\",\r\n    \"old_serial_number\": 1025,\r\n    \"relative_phone\": \"+8801812345678\",\r\n    \"address\": \"Mirpur, Dhaka\",\r\n    \"age\": 32,\r\n    \"miasm_type\": \"TYPHOID\",\r\n    \"case_history\": \"Previous history of headache.\",\r\n    \"habits\": \"Non-smoker.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/organizations/abc-chamber-of-commerce/homeopathy/patients",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "organizations",
+                "abc-chamber-of-commerce",
+                "homeopathy",
+                "patients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "patient-detail",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "upload_files",
+                  "type": "file",
+                  "src": [
+                    "/C:/Users/rapto/Downloads/TO WHOM IT MAY CONCERN.pdf",
+                    "/C:/Users/rapto/Downloads/Landkeeper - Mortgage adviser portal.docx",
+                    "/C:/Users/rapto/Downloads/qop (1).png",
+                    "/C:/Users/rapto/Downloads/qop.png"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/organizations/abc-chamber-of-commerce/homeopathy/patients/5aac2d7a-3ec2-4eda-b7de-bf8a58660e74",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "organizations",
+                "abc-chamber-of-commerce",
+                "homeopathy",
+                "patients",
+                "5aac2d7a-3ec2-4eda-b7de-bf8a58660e74"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "appointment-list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"symptoms\": \"Severe headache, fever and weakness\",\r\n  \"treatment_effectiveness\": \"Good improvement after previous treatment\",\r\n  \"status\": \"ACTIVE\",\r\n  \"patient_uid\": \"5aac2d7a-3ec2-4eda-b7de-bf8a58660e74\",\r\n  \"medicine_uids\": [\r\n    \"602c151b-f9ff-4c04-8c4a-d70db11c32ee\",\r\n    \"0fe71d4f-4608-45aa-82bc-6a7b05b4142d\"\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/organizations/abc-chamber-of-commerce/homeopathy/appointments",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "organizations",
+                "abc-chamber-of-commerce",
+                "homeopathy",
+                "appointments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "appointment-detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "upload_files",
+                  "type": "file",
+                  "src": [
+                    "/C:/Users/rapto/Downloads/Suitability_Letter_Error.jpg",
+                    "/C:/Users/rapto/Downloads/2_july_2 (1).jpeg",
+                    "/C:/Users/rapto/Downloads/2_july.jpeg"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/organizations/abc-chamber-of-commerce/homeopathy/appointments/189a9e1f-4489-4540-b855-52311c160661",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "organizations",
+                "abc-chamber-of-commerce",
+                "homeopathy",
+                "appointments",
+                "189a9e1f-4489-4540-b855-52311c160661"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "medicine-list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Montair\",\r\n  \"power\": 30,\r\n  \"expiration_date\": \"2028-12-31\",\r\n  \"is_available\": true,\r\n  \"manufacturer\": \"Boiron\",\r\n  \"total_quantity\": 100,\r\n  \"unit_price\": \"25.50\",\r\n  \"description\": \"Used for bruising and muscle soreness.\",\r\n  \"batch_number\": \"ARN-2026-001\",\r\n  \"status\": \"AVAILABLE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/organizations/abc-chamber-of-commerce/homeopathy/medicines",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "organizations",
+                "abc-chamber-of-commerce",
+                "homeopathy",
+                "medicines"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "medicine-detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": [
+                    "/C:/Users/rapto/Downloads/2_july.jpeg"
+                  ],
+                  "disabled": true
+                },
+                {
+                  "key": "upload_files",
+                  "type": "file",
+                  "src": [
+                    "/C:/Users/rapto/Downloads/Property Project - V1.docx",
+                    "/C:/Users/rapto/Downloads/Screenshot_2026-06-09_103119 (1).jpg",
+                    "/C:/Users/rapto/Downloads/Property_Portfolio (1).jpg"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/organizations/abc-chamber-of-commerce/homeopathy/medicines/0fe71d4f-4608-45aa-82bc-6a7b05b4142d",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "organizations",
+                "abc-chamber-of-commerce",
+                "homeopathy",
+                "medicines",
+                "0fe71d4f-4608-45aa-82bc-6a7b05b4142d"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg5MjA2MTA4LCJpYXQiOjE3ODg3NzQxMDgsImp0aSI6ImM1M2NiMjdkNjM0YTQ3NzM4NGJiZWVkMmVkNWE5MDk2IiwidXNlcl9pZCI6Njl9.EbEr-XFq3FUuoc6bTHL2xxGgbkvKh58tdwaKmeGN5SE",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8000/api"
+    },
+    {
+      "key": "HOMEOPATHIC_URL",
+      "value": "http://localhost:8000/api/organization/homeopathy"
+    },
+    {
+      "key": "json_web_token_0bhw",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_01vp",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_01vp",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_1890",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_1890",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_16ic",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_0dnu",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_05i8",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_05i8",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_1ax9",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_0v5m",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_1ax9",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_0kp0",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_18op",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_1c43",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_0y01",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_0y01",
+      "secret": true
+    },
+    {
+      "key": "supabase_service_role_api_key_017r",
+      "secret": true
+    }
+  ]
+}
