@@ -4,6 +4,15 @@ from apps.organizations.models import Organization
 
 
 class SubdomainMiddleware:
+    PUBLIC_PATH_PREFIXES = [
+        "/super-admin/",
+        "/static/",
+        "/media/",
+        "/auth/set-password",
+        "/auth/reset-password",
+        "/auth/forgot-password",
+    ]
+
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -22,10 +31,11 @@ class SubdomainMiddleware:
             return self.get_response(request)
 
         # --------------------------------
-        # Super admin API
+        # Public paths
+        # No organization subdomain required
         # --------------------------------
-        if path.startswith("/super-admin/"):
-            request.is_platform = True
+        if any(path.startswith(prefix) for prefix in self.PUBLIC_PATH_PREFIXES):
+            request.is_platform = False
             request.organization = None
             request.subdomain = subdomain
 
@@ -40,6 +50,9 @@ class SubdomainMiddleware:
                 status=400,
             )
 
+        # --------------------------------
+        # Resolve organization
+        # --------------------------------
         try:
             organization = Organization.objects.get(subdomain=subdomain)
         except Organization.DoesNotExist:

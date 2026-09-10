@@ -39,7 +39,6 @@ class PatientUserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "uid",
-            "avatar",
             "name",
         ]
 
