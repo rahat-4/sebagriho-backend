@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 
 from rest_framework import serializers
 
@@ -10,6 +11,7 @@ from apps.homeopathy.models import (
     HomeopathicAppointment,
     HomeopathicMedicine,
 )
+from apps.homeopathy.utils import get_next_patient_serial
 
 
 from common.models import Attachment
@@ -45,11 +47,13 @@ class PatientUserSerializer(serializers.ModelSerializer):
 
 class HomeopathicPatientSerializer(serializers.ModelSerializer):
     user = PatientUserSerializer()
+
     upload_files = serializers.ListField(
         child=serializers.FileField(),
         write_only=True,
         required=False,
     )
+
     files = AttachmentSimSerializer(
         source="attachments",
         many=True,
@@ -85,6 +89,7 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    @transaction.atomic
     def create(self, validated_data):
         user_data = validated_data.pop("user")
         files = validated_data.pop("upload_files", [])
@@ -92,11 +97,17 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         organization = request.organization
 
-        user = User.objects.create_user(**user_data)
+        # Generate organization-scoped patient serial number
+        serial_number = get_next_patient_serial(organization)
+
+        user = User.objects.create_user(
+            **user_data,
+        )
 
         patient = HomeopathicPatient.objects.create(
             user=user,
             organization=organization,
+            serial_number=serial_number,
             **validated_data,
         )
 
@@ -109,11 +120,14 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
 
         return patient
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", None)
         files = validated_data.pop("upload_files", [])
 
+        # -------------------------
         # Update User
+        # -------------------------
         if user_data:
             user = instance.user
 
@@ -122,13 +136,17 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
 
             user.save()
 
+        # -------------------------
         # Update Patient
+        # -------------------------
         for field, value in validated_data.items():
             setattr(instance, field, value)
 
         instance.save()
 
-        # Add new attachments
+        # -------------------------
+        # Add attachments
+        # -------------------------
         self._create_attachments(
             patient=instance,
             files=files,

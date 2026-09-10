@@ -26,8 +26,6 @@ class HomeopathicPatientListCreateView(ListCreateAPIView):
         "user__email",
         "serial_number",
         "old_serial_number",
-        "relative_phone",
-        "age",
     ]
 
     def get_queryset(self):

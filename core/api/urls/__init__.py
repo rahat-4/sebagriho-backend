@@ -5,4 +5,5 @@ urlpatterns = [
     path("/organizations", include("api.urls.organizations")),
     path("/admin", include("api.urls.admin")),
     path("/homeopathy", include("api.urls.homeopathy")),
+    path("/filters", include("api.urls.filters")),
 ]

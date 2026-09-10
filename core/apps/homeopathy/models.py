@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
-from django.dispatch import receiver
-from django.db.models.signals import pre_save
 
 from autoslug import AutoSlugField
 from phonenumber_field.modelfields import PhoneNumberField
@@ -10,7 +8,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 from apps.organizations.models import Organization
 
 from common.models import BaseModelWithUid, Attachment
-from common.utils import unique_number_generator
 
 from .choices import (
     HomeopathicPatientStatus,
@@ -22,15 +19,13 @@ from .utils import (
     get_homeopathic_patient_slug,
     get_homeopathic_appointment_slug,
     get_medicine_media_path_prefix,
-    get_appointment_file_path,
-    get_patient_file_path,
 )
 
 User = get_user_model()
 
 
 class HomeopathicPatient(BaseModelWithUid):
-    serial_number = models.PositiveIntegerField(unique=True, editable=False)
+    serial_number = models.PositiveIntegerField(editable=False)
     slug = AutoSlugField(unique=True, populate_from=get_homeopathic_patient_slug)
     status = models.CharField(
         max_length=20,
@@ -60,6 +55,14 @@ class HomeopathicPatient(BaseModelWithUid):
         on_delete=models.CASCADE,
         related_name="organization_homeopathic_patients",
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "serial_number"],
+                name="unique_patient_serial_per_organization",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.uid}"
@@ -136,9 +139,3 @@ class HomeopathicMedicine(BaseModelWithUid):
 
     def __str__(self):
         return f"{self.organization.name}"
-
-
-@receiver(pre_save, sender=HomeopathicPatient)
-def set_patient_serial_number(sender, instance, **kwargs):
-    if not instance.serial_number:
-        instance.serial_number = unique_number_generator(instance)
