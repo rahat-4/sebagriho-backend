@@ -4,8 +4,6 @@ from django.db import transaction
 
 from rest_framework import serializers
 
-from apps.organizations.models import OrganizationMember
-from apps.organizations.choices import OrganizationMemberStatus
 from apps.homeopathy.models import (
     HomeopathicPatient,
     HomeopathicAppointment,
@@ -15,7 +13,11 @@ from apps.homeopathy.utils import get_next_patient_serial
 
 
 from common.models import Attachment
-from common.serializers import AttachmentSimSerializer
+from common.serializers import (
+    AttachmentSimSerializer,
+    UserSlimSerializer,
+    MedicineSlimSerializer,
+)
 
 User = get_user_model()
 
@@ -174,18 +176,14 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
 
 
 class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
-    patient_uid = serializers.UUIDField(
+    patient = serializers.UUIDField(
         write_only=True,
         required=True,
     )
 
-    patient_name = serializers.CharField(
-        source="homeopathic_patient.user.get_full_name",
-        read_only=True,
-    )
-
     medicine_uids = serializers.ListField(
         child=serializers.UUIDField(),
+        write_only=True,
         required=False,
     )
 
@@ -201,6 +199,11 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         required=False,
     )
 
+    medicines = MedicineSlimSerializer(
+        many=True,
+        read_only=True,
+    )
+
     class Meta:
         model = HomeopathicAppointment
         fields = [
@@ -209,8 +212,8 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             "symptoms",
             "treatment_effectiveness",
             "status",
-            "patient_uid",
-            "patient_name",
+            "patient",
+            "medicines",
             "medicine_uids",
             "files",
             "upload_files",
@@ -220,8 +223,8 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "uid",
             "slug",
-            "patient_name",
             "files",
+            "medicines",
             "created_at",
             "updated_at",
         ]
@@ -230,8 +233,10 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         organization = request.organization
 
+        errors = {}
+
         # Patient
-        patient_uid = attrs.pop("patient_uid", None)
+        patient_uid = attrs.pop("patient", None)
 
         if patient_uid is not None:
             try:
@@ -239,46 +244,33 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
                     uid=patient_uid,
                     organization=organization,
                 )
-            except HomeopathicPatient.DoesNotExist:
-                raise serializers.ValidationError(
-                    {"patient_uid": ("Patient does not belong to this organization.")}
-                )
+                attrs["homeopathic_patient"] = patient
 
-            attrs["homeopathic_patient"] = patient
+            except HomeopathicPatient.DoesNotExist:
+                errors["patient"] = "Patient does not belong to this organization."
 
         # Medicines
         medicine_uids = attrs.pop("medicine_uids", None)
 
         if medicine_uids is not None:
+            medicine_uids = list(set(medicine_uids))
+
             medicines = HomeopathicMedicine.objects.filter(
                 uid__in=medicine_uids,
                 organization=organization,
             )
 
-            if medicines.count() != len(set(medicine_uids)):
-                raise serializers.ValidationError(
-                    {
-                        "medicine_uids": (
-                            "One or more medicines do not belong "
-                            "to this organization."
-                        )
-                    }
+            if medicines.count() != len(medicine_uids):
+                errors["medicine_uids"] = (
+                    "One or more medicines do not belong " "to this organization."
                 )
+            else:
+                attrs["_medicines"] = list(medicines)
 
-            attrs["_medicines"] = medicines
+        if errors:
+            raise serializers.ValidationError(errors)
 
         return attrs
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-
-        representation["patient_uid"] = str(instance.homeopathic_patient.uid)
-
-        representation["medicine_uids"] = [
-            str(medicine.uid) for medicine in instance.medicines.all()
-        ]
-
-        return representation
 
     def create(self, validated_data):
         medicines = validated_data.pop("_medicines", None)
@@ -322,6 +314,15 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             )
 
         return instance
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        representation["patient"] = UserSlimSerializer(
+            instance.homeopathic_patient.user
+        ).data
+
+        return representation
 
     def _create_attachments(self, appointment, files, organization):
         if not files:

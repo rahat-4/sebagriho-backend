@@ -4,6 +4,8 @@ from rest_framework import serializers
 
 from apps.organizations.models import Organization
 
+from apps.homeopathy.models import HomeopathicMedicine
+
 from .models import Attachment
 
 User = get_user_model()
@@ -97,3 +99,16 @@ class OrganizationSlimSerializer(serializers.ModelSerializer):
             representation["logo"] = request.build_absolute_uri(representation["logo"])
 
         return representation
+
+
+class MedicineSlimSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeopathicMedicine
+        fields = [
+            "uid",
+            "name",
+            "power",
+            "expiration_date",
+            "manufacturer",
+            "batch_number",
+        ]
