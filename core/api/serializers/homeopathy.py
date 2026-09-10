@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 
 from rest_framework import serializers
@@ -12,12 +11,12 @@ from apps.homeopathy.models import (
 from apps.homeopathy.utils import get_next_patient_serial
 
 
-from common.models import Attachment
 from common.serializers import (
     AttachmentSimSerializer,
     UserSlimSerializer,
     MedicineSlimSerializer,
 )
+from common.file_attachments import create_attachments, delete_attachments
 
 User = get_user_model()
 
@@ -55,6 +54,11 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
     )
+    remove_files = serializers.ListField(
+        child=serializers.UUIDField(),
+        write_only=True,
+        required=False,
+    )
 
     files = AttachmentSimSerializer(
         source="attachments",
@@ -77,8 +81,9 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
             "case_history",
             "habits",
             "user",
-            "upload_files",
             "files",
+            "upload_files",
+            "remove_files",
             "created_at",
             "updated_at",
         ]
@@ -94,7 +99,7 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         user_data = validated_data.pop("user")
-        files = validated_data.pop("upload_files", [])
+        upload_files = validated_data.pop("upload_files", [])
 
         request = self.context["request"]
         organization = request.organization
@@ -113,19 +118,21 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
             **validated_data,
         )
 
-        self._create_attachments(
-            patient=patient,
-            files=files,
-            organization=organization,
-            uploaded_by=request.user,
-        )
+        if upload_files:
+            create_attachments(
+                patient=patient,
+                files=upload_files,
+                organization=organization,
+                uploaded_by=request.user,
+            )
 
         return patient
 
     @transaction.atomic
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", None)
-        files = validated_data.pop("upload_files", [])
+        upload_files = validated_data.pop("upload_files", [])
+        remove_files = validated_data.pop("remove_files", [])
 
         # -------------------------
         # Update User
@@ -146,33 +153,22 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
 
         instance.save()
 
-        # -------------------------
-        # Add attachments
-        # -------------------------
-        self._create_attachments(
-            patient=instance,
-            files=files,
-            organization=instance.organization,
-            uploaded_by=self.context["request"].user,
-        )
+        if upload_files:
+            create_attachments(
+                content_object=instance,
+                files=upload_files,
+                organization=instance.organization,
+                uploaded_by=self.context["request"].user,
+            )
+
+        if remove_files:
+            delete_attachments(
+                content_object=instance,
+                uids=remove_files,
+                organization=instance.organization,
+            )
 
         return instance
-
-    def _create_attachments(
-        self,
-        patient,
-        files,
-        organization,
-        uploaded_by,
-    ):
-        for file in files:
-            Attachment.objects.create(
-                file=file,
-                name=file.name,
-                organization=organization,
-                uploaded_by=uploaded_by,
-                content_object=patient,
-            )
 
 
 class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
@@ -180,25 +176,26 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         write_only=True,
         required=True,
     )
-
     medicine_uids = serializers.ListField(
         child=serializers.UUIDField(),
         write_only=True,
         required=False,
     )
-
     files = AttachmentSimSerializer(
         source="attachments",
         many=True,
         read_only=True,
     )
-
     upload_files = serializers.ListField(
         child=serializers.FileField(),
         write_only=True,
         required=False,
     )
-
+    remove_files = serializers.ListField(
+        child=serializers.UUIDField(),
+        write_only=True,
+        required=False,
+    )
     medicines = MedicineSlimSerializer(
         many=True,
         read_only=True,
@@ -217,6 +214,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             "medicine_uids",
             "files",
             "upload_files",
+            "remove_files",
             "created_at",
             "updated_at",
         ]
@@ -286,17 +284,20 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         if medicines is not None:
             appointment.medicines.set(medicines)
 
-        self._create_attachments(
-            appointment,
-            upload_files,
-            organization,
-        )
+        if upload_files:
+            create_attachments(
+                content_object=appointment,
+                files=upload_files,
+                organization=organization,
+                uploaded_by=self.context["request"].user,
+            )
 
         return appointment
 
     def update(self, instance, validated_data):
         medicines = validated_data.pop("_medicines", None)
         upload_files = validated_data.pop("upload_files", [])
+        remove_files = validated_data.pop("remove_files", [])
 
         for field, value in validated_data.items():
             setattr(instance, field, value)
@@ -307,10 +308,18 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             instance.medicines.set(medicines)
 
         if upload_files:
-            self._create_attachments(
-                instance,
-                upload_files,
-                instance.organization,
+            create_attachments(
+                content_object=instance,
+                files=upload_files,
+                organization=instance.organization,
+                uploaded_by=self.context["request"].user,
+            )
+
+        if remove_files:
+            delete_attachments(
+                content_object=instance,
+                uids=remove_files,
+                organization=instance.organization,
             )
 
         return instance
@@ -324,24 +333,6 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
 
         return representation
 
-    def _create_attachments(self, appointment, files, organization):
-        if not files:
-            return
-
-        content_type = ContentType.objects.get_for_model(HomeopathicAppointment)
-
-        request = self.context.get("request")
-
-        for file in files:
-            Attachment.objects.create(
-                file=file,
-                name=file.name,
-                uploaded_by=request.user if request else None,
-                organization=organization,
-                content_type=content_type,
-                object_id=appointment.pk,
-            )
-
 
 class HomeopathicMedicineSerializer(serializers.ModelSerializer):
     files = AttachmentSimSerializer(
@@ -349,9 +340,13 @@ class HomeopathicMedicineSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
     )
-
     upload_files = serializers.ListField(
         child=serializers.FileField(),
+        write_only=True,
+        required=False,
+    )
+    remove_files = serializers.ListField(
+        child=serializers.UUIDField(),
         write_only=True,
         required=False,
     )
@@ -372,6 +367,7 @@ class HomeopathicMedicineSerializer(serializers.ModelSerializer):
             "status",
             "files",
             "upload_files",
+            "remove_files",
             "created_at",
             "updated_at",
         ]
@@ -384,7 +380,6 @@ class HomeopathicMedicineSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         upload_files = validated_data.pop("upload_files", [])
-
         request = self.context["request"]
         organization = request.organization
 
@@ -393,16 +388,19 @@ class HomeopathicMedicineSerializer(serializers.ModelSerializer):
             **validated_data,
         )
 
-        self._create_attachments(
-            medicine,
-            upload_files,
-            organization,
-        )
+        if upload_files:
+            create_attachments(
+                content_object=medicine,
+                files=upload_files,
+                organization=organization,
+                uploaded_by=self.context["request"].user,
+            )
 
         return medicine
 
     def update(self, instance, validated_data):
         upload_files = validated_data.pop("upload_files", [])
+        remove_files = validated_data.pop("remove_files", [])
 
         for field, value in validated_data.items():
             setattr(instance, field, value)
@@ -410,28 +408,18 @@ class HomeopathicMedicineSerializer(serializers.ModelSerializer):
         instance.save()
 
         if upload_files:
-            self._create_attachments(
-                instance,
-                upload_files,
-                instance.organization,
+            create_attachments(
+                content_object=instance,
+                files=upload_files,
+                organization=instance.organization,
+                uploaded_by=self.context["request"].user,
+            )
+
+        if remove_files:
+            delete_attachments(
+                content_object=instance,
+                uids=remove_files,
+                organization=instance.organization,
             )
 
         return instance
-
-    def _create_attachments(self, medicine, files, organization):
-        if not files:
-            return
-
-        content_type = ContentType.objects.get_for_model(HomeopathicMedicine)
-
-        request = self.context.get("request")
-
-        for file in files:
-            Attachment.objects.create(
-                file=file,
-                name=file.name,
-                uploaded_by=request.user if request else None,
-                organization=organization,
-                content_type=content_type,
-                object_id=medicine.pk,
-            )
