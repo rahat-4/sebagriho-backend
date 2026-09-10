@@ -122,7 +122,6 @@ class HomeopathicMedicineListCreateView(ListCreateAPIView):
     permission_classes = [IsOrganizationOwner]
     filterset_fields = {
         "status": ["exact"],
-        "is_available": ["exact"],
         "expiration_date": ["gte", "lte"],
     }
     search_fields = ["name", "manufacturer", "batch_number"]

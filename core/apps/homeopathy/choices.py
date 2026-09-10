@@ -29,4 +29,4 @@ class HomeopathicAppointmentStatus(models.TextChoices):
 
 class HomeopathicMedicineStatus(models.TextChoices):
     AVAILABLE = "AVAILABLE", "Available"
-    DELETED = "DELETED", "Deleted"
+    UNAVAILABLE = "UNAVAILABLE", "Unavailable"

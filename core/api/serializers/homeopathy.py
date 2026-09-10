@@ -346,7 +346,6 @@ class HomeopathicMedicineSerializer(serializers.ModelSerializer):
             "name",
             "power",
             "expiration_date",
-            "is_available",
             "manufacturer",
             "total_quantity",
             "unit_price",

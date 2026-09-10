@@ -110,7 +110,6 @@ class HomeopathicMedicine(BaseModelWithUid):
     name = models.CharField(max_length=100)
     power = models.PositiveIntegerField(blank=True, null=True)
     expiration_date = models.DateField(blank=True, null=True)
-    is_available = models.BooleanField(default=False)
     manufacturer = models.CharField(max_length=255, null=True, blank=True)
     total_quantity = models.PositiveIntegerField(null=True, blank=True)
     unit_price = models.DecimalField(
