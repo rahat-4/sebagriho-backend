@@ -14,6 +14,7 @@ from .choices import (
     MiasmType,
     HomeopathicAppointmentStatus,
     HomeopathicMedicineStatus,
+    HomeopathicPrescriptionMealTiming,
 )
 from .utils import (
     get_homeopathic_patient_slug,
@@ -69,14 +70,24 @@ class HomeopathicPatient(BaseModelWithUid):
 
 
 class HomeopathicAppointment(BaseModelWithUid):
-    slug = AutoSlugField(unique=True, populate_from=get_homeopathic_appointment_slug)
+    slug = AutoSlugField(
+        unique=True,
+        populate_from=get_homeopathic_appointment_slug,
+    )
+
     symptoms = models.TextField(blank=True, null=True)
-    treatment_effectiveness = models.TextField(blank=True, null=True)
+
+    treatment_effectiveness = models.TextField(
+        blank=True,
+        null=True,
+    )
+
     status = models.CharField(
         max_length=20,
         choices=HomeopathicAppointmentStatus.choices,
         default=HomeopathicAppointmentStatus.ACTIVE,
     )
+
     attachments = GenericRelation(
         Attachment,
         related_query_name="homeopathic_appointment_attachments",
@@ -87,20 +98,17 @@ class HomeopathicAppointment(BaseModelWithUid):
         on_delete=models.CASCADE,
         related_name="homeopathic_patient_appointments",
     )
-    medicines = models.ManyToManyField(
-        "HomeopathicMedicine",
-        related_name="homeopathic_appointments_medicines",
-        blank=True,
-        help_text="Medicines prescribed during the appointment",
-    )
+
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
-        related_name="organizations_homeopathic_patients_appointments",
+        related_name="homeopathic_appointments",
     )
 
     def __str__(self):
-        return f"{self.organization.name} - {self.homeopathic_patient.serial_number}"
+        return (
+            f"{self.organization.name} - " f"{self.homeopathic_patient.serial_number}"
+        )
 
 
 class HomeopathicMedicine(BaseModelWithUid):
@@ -139,3 +147,56 @@ class HomeopathicMedicine(BaseModelWithUid):
 
     def __str__(self):
         return f"{self.organization.name}"
+
+
+class HomeopathicPrescription(BaseModelWithUid):
+    appointment = models.ForeignKey(
+        HomeopathicAppointment,
+        on_delete=models.CASCADE,
+        related_name="appointment_prescriptions",
+    )
+    medicine = models.ForeignKey(
+        HomeopathicMedicine,
+        on_delete=models.PROTECT,
+        related_name="medicine_prescriptions",
+    )
+    dosage = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="e.g. 3 pills, 5 drops",
+    )
+    frequency = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="e.g. 3 times daily, once daily",
+    )
+    duration = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text="Duration in days",
+    )
+    meal_timing = models.CharField(
+        max_length=20,
+        choices=HomeopathicPrescriptionMealTiming.choices,
+        default=HomeopathicPrescriptionMealTiming.ANY_TIME,
+    )
+    instructions = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Additional instructions",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["appointment", "medicine"],
+                name="unique_medicine_per_appointment",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.medicine.name} - {self.appointment}"

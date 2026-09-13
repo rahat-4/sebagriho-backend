@@ -60,7 +60,9 @@ class HomeopathicPatientDetailView(RetrieveUpdateDestroyAPIView):
 class HomeopathicAppointmentListCreateView(ListCreateAPIView):
     permission_classes = [IsOrganizationOwner]
     serializer_class = HomeopathicAppointmentSerializer
-    filterset_fields = ["status", "homeopathic_patient__miasm_type"]
+
+    filterset_fields = ["homeopathic_patient__miasm_type"]
+
     search_fields = [
         "symptoms",
         "homeopathic_patient__user__first_name",
@@ -74,7 +76,12 @@ class HomeopathicAppointmentListCreateView(ListCreateAPIView):
     ]
 
     def get_queryset(self):
-        organization = getattr(self.request, "organization", None)
+        organization = getattr(
+            self.request,
+            "organization",
+            None,
+        )
+
         return (
             HomeopathicAppointment.objects.filter(
                 organization=organization,
@@ -84,7 +91,7 @@ class HomeopathicAppointmentListCreateView(ListCreateAPIView):
                 "homeopathic_patient__user",
             )
             .prefetch_related(
-                "medicines",
+                "appointment_prescriptions__medicine",
                 "attachments",
             )
             .order_by("-created_at")
@@ -99,7 +106,12 @@ class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = "appointment_uid"
 
     def get_queryset(self):
-        organization = getattr(self.request, "organization", None)
+        organization = getattr(
+            self.request,
+            "organization",
+            None,
+        )
+
         return (
             HomeopathicAppointment.objects.filter(
                 organization=organization,
@@ -109,7 +121,7 @@ class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
                 "homeopathic_patient__user",
             )
             .prefetch_related(
-                "medicines",
+                "appointment_prescriptions__medicine",
                 "attachments",
             )
         )

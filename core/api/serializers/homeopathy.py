@@ -7,13 +7,14 @@ from apps.homeopathy.models import (
     HomeopathicPatient,
     HomeopathicAppointment,
     HomeopathicMedicine,
+    HomeopathicPrescription,
 )
 from apps.homeopathy.utils import get_next_patient_serial
 
 
 from common.serializers import (
     AttachmentSimSerializer,
-    UserSlimSerializer,
+    HomeopathicPatientSlimSerializer,
     MedicineSlimSerializer,
 )
 from common.file_attachments import create_attachments, delete_attachments
@@ -171,12 +172,54 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
         return instance
 
 
+class HomeopathicPrescriptionSerializer(serializers.ModelSerializer):
+    medicine = serializers.UUIDField()
+    medicine_details = MedicineSlimSerializer(
+        source="medicine",
+        read_only=True,
+    )
+
+    class Meta:
+        model = HomeopathicPrescription
+        fields = [
+            "uid",
+            "medicine",
+            "medicine_details",
+            "dosage",
+            "frequency",
+            "duration",
+            "meal_timing",
+            "instructions",
+        ]
+        read_only_fields = [
+            "uid",
+            "medicine_details",
+        ]
+
+    def validate_medicine(self, value):
+        organization = self.context["request"].organization
+
+        try:
+            return HomeopathicMedicine.objects.get(
+                uid=value,
+                organization=organization,
+            )
+        except HomeopathicMedicine.DoesNotExist:
+            raise serializers.ValidationError(
+                "Medicine does not belong to this organization."
+            )
+
+
 class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
     patient = serializers.UUIDField(
         write_only=True,
         required=True,
     )
-    medicine_uids = serializers.ListField(
+    prescription = HomeopathicPrescriptionSerializer(
+        many=True,
+        required=False,
+    )
+    remove_medicine_uids = serializers.ListField(
         child=serializers.UUIDField(),
         write_only=True,
         required=False,
@@ -196,10 +239,6 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
     )
-    medicines = MedicineSlimSerializer(
-        many=True,
-        read_only=True,
-    )
 
     class Meta:
         model = HomeopathicAppointment
@@ -210,8 +249,8 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             "treatment_effectiveness",
             "status",
             "patient",
-            "medicines",
-            "medicine_uids",
+            "prescription",
+            "remove_medicine_uids",
             "files",
             "upload_files",
             "remove_files",
@@ -222,7 +261,6 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             "uid",
             "slug",
             "files",
-            "medicines",
             "created_at",
             "updated_at",
         ]
@@ -231,9 +269,9 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         organization = request.organization
 
-        errors = {}
-
-        # Patient
+        # --------------------------------
+        # Patient validation
+        # --------------------------------
         patient_uid = attrs.pop("patient", None)
 
         if patient_uid is not None:
@@ -242,48 +280,69 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
                     uid=patient_uid,
                     organization=organization,
                 )
-                attrs["homeopathic_patient"] = patient
-
             except HomeopathicPatient.DoesNotExist:
-                errors["patient"] = "Patient does not belong to this organization."
-
-        # Medicines
-        medicine_uids = attrs.pop("medicine_uids", None)
-
-        if medicine_uids is not None:
-            medicine_uids = list(set(medicine_uids))
-
-            medicines = HomeopathicMedicine.objects.filter(
-                uid__in=medicine_uids,
-                organization=organization,
-            )
-
-            if medicines.count() != len(medicine_uids):
-                errors["medicine_uids"] = (
-                    "One or more medicines do not belong " "to this organization."
+                raise serializers.ValidationError(
+                    {"patient": ("Patient does not belong to this organization.")}
                 )
-            else:
-                attrs["_medicines"] = list(medicines)
 
-        if errors:
-            raise serializers.ValidationError(errors)
+            attrs["homeopathic_patient"] = patient
+
+        # --------------------------------
+        # Remove medicine UUIDs
+        # --------------------------------
+        remove_medicine_uids = attrs.get(
+            "remove_medicine_uids",
+            [],
+        )
+
+        if remove_medicine_uids:
+            attrs["remove_medicine_uids"] = list(set(remove_medicine_uids))
 
         return attrs
 
     def create(self, validated_data):
-        medicines = validated_data.pop("_medicines", None)
-        upload_files = validated_data.pop("upload_files", [])
-
+        prescription_data = validated_data.pop(
+            "prescription",
+            [],
+        )
+        # Not applicable during create
+        validated_data.pop(
+            "remove_medicine_uids",
+            [],
+        )
+        upload_files = validated_data.pop(
+            "upload_files",
+            [],
+        )
         organization = self.context["request"].organization
 
+        # --------------------------------
+        # Create appointment
+        # --------------------------------
         appointment = HomeopathicAppointment.objects.create(
             organization=organization,
             **validated_data,
         )
 
-        if medicines is not None:
-            appointment.medicines.set(medicines)
+        # --------------------------------
+        # Create prescription
+        # --------------------------------
+        prescription = []
 
+        for prescription_data in prescription_data:
+            prescription.append(
+                HomeopathicPrescription(
+                    appointment=appointment,
+                    **prescription_data,
+                )
+            )
+
+        if prescription:
+            HomeopathicPrescription.objects.bulk_create(prescription)
+
+        # --------------------------------
+        # Upload files
+        # --------------------------------
         if upload_files:
             create_attachments(
                 content_object=appointment,
@@ -295,18 +354,62 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         return appointment
 
     def update(self, instance, validated_data):
-        medicines = validated_data.pop("_medicines", None)
-        upload_files = validated_data.pop("upload_files", [])
-        remove_files = validated_data.pop("remove_files", [])
+        prescription_data = validated_data.pop(
+            "prescription",
+            None,
+        )
+        remove_medicine_uids = validated_data.pop(
+            "remove_medicine_uids",
+            [],
+        )
+        upload_files = validated_data.pop(
+            "upload_files",
+            [],
+        )
+        remove_files = validated_data.pop(
+            "remove_files",
+            [],
+        )
 
+        # --------------------------------
+        # Update appointment fields
+        # --------------------------------
         for field, value in validated_data.items():
             setattr(instance, field, value)
 
         instance.save()
 
-        if medicines is not None:
-            instance.medicines.set(medicines)
+        # --------------------------------
+        # Remove one/multiple medicines
+        # --------------------------------
+        if remove_medicine_uids:
+            HomeopathicPrescription.objects.filter(
+                appointment=instance,
+                medicine__uid__in=remove_medicine_uids,
+            ).delete()
 
+        # --------------------------------
+        # Create / update prescription
+        # --------------------------------
+        if prescription_data is not None:
+            for prescription_data in prescription_data:
+                medicine = prescription_data["medicine"]
+
+                HomeopathicPrescription.objects.update_or_create(
+                    appointment=instance,
+                    medicine=medicine,
+                    defaults={
+                        "dosage": prescription_data.get("dosage"),
+                        "frequency": prescription_data.get("frequency"),
+                        "duration": prescription_data.get("duration"),
+                        "meal_timing": prescription_data.get("meal_timing"),
+                        "instructions": prescription_data.get("instructions"),
+                    },
+                )
+
+        # --------------------------------
+        # Upload files
+        # --------------------------------
         if upload_files:
             create_attachments(
                 content_object=instance,
@@ -315,6 +418,9 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
                 uploaded_by=self.context["request"].user,
             )
 
+        # --------------------------------
+        # Remove files
+        # --------------------------------
         if remove_files:
             delete_attachments(
                 content_object=instance,
@@ -327,8 +433,8 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
 
-        representation["patient"] = UserSlimSerializer(
-            instance.homeopathic_patient.user
+        representation["patient"] = HomeopathicPatientSlimSerializer(
+            instance.homeopathic_patient
         ).data
 
         return representation

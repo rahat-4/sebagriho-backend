@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class HomeopathicPatientStatus(models.TextChoices):
@@ -30,3 +31,13 @@ class HomeopathicAppointmentStatus(models.TextChoices):
 class HomeopathicMedicineStatus(models.TextChoices):
     AVAILABLE = "AVAILABLE", "Available"
     UNAVAILABLE = "UNAVAILABLE", "Unavailable"
+
+
+class HomeopathicPrescriptionMealTiming(models.TextChoices):
+    BEFORE_MEAL = "BEFORE_MEAL", _("Before Meal")
+    AFTER_MEAL = "AFTER_MEAL", _("After Meal")
+    WITH_MEAL = "WITH_MEAL", _("With Meal")
+    BETWEEN_MEALS = "BETWEEN_MEALS", _("Between Meals")
+    BEDTIME = "BEDTIME", _("At Bedtime")
+    EMPTY_STOMACH = "EMPTY_STOMACH", _("On Empty Stomach")
+    ANY_TIME = "ANY_TIME", _("Any Time")
