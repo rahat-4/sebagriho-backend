@@ -22,6 +22,20 @@ from common.file_attachments import create_attachments, delete_attachments
 User = get_user_model()
 
 
+class HomeopathicDashboardSerializer(serializers.Serializer):
+    from rest_framework import serializers
+
+
+class HomeopathicDashboardSerializer(serializers.Serializer):
+    summary = serializers.DictField()
+    patient_growth = serializers.ListField()
+    appointment_growth = serializers.ListField()
+    appointment_status = serializers.ListField()
+    patient_status = serializers.ListField()
+    medicine_status = serializers.ListField()
+    top_medicines = serializers.ListField()
+
+
 class PatientUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(
         source="get_full_name",

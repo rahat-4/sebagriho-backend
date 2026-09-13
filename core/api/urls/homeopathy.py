@@ -1,6 +1,7 @@
 from django.urls import path
 
 from ..views.homeopathy import (
+    HomeopathicDashboardView,
     HomeopathicPatientListCreateView,
     HomeopathicPatientDetailView,
     HomeopathicAppointmentListCreateView,
@@ -10,6 +11,9 @@ from ..views.homeopathy import (
 )
 
 urlpatterns = [
+    path(
+        "/dashboard", HomeopathicDashboardView.as_view(), name="homeopathic-dashboard"
+    ),
     # Patients
     path(
         "/patients",
