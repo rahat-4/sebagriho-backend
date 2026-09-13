@@ -12,6 +12,8 @@ User = get_user_model()
 
 
 class UserSlimSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -33,6 +35,19 @@ class UserSlimSerializer(serializers.ModelSerializer):
             "is_admin",
             "is_owner",
         ]
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+
+        if not obj.avatar:
+            return None
+
+        url = obj.avatar.url
+
+        if request:
+            return request.build_absolute_uri(url)
+
+        return url
 
 
 class AttachmentSimSerializer(serializers.ModelSerializer):

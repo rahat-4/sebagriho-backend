@@ -74,31 +74,25 @@ class HomeopathicAppointment(BaseModelWithUid):
         unique=True,
         populate_from=get_homeopathic_appointment_slug,
     )
-
     symptoms = models.TextField(blank=True, null=True)
-
     treatment_effectiveness = models.TextField(
         blank=True,
         null=True,
     )
-
     status = models.CharField(
         max_length=20,
         choices=HomeopathicAppointmentStatus.choices,
         default=HomeopathicAppointmentStatus.ACTIVE,
     )
-
     attachments = GenericRelation(
         Attachment,
         related_query_name="homeopathic_appointment_attachments",
     )
-
     homeopathic_patient = models.ForeignKey(
         HomeopathicPatient,
         on_delete=models.CASCADE,
         related_name="homeopathic_patient_appointments",
     )
-
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
@@ -133,12 +127,10 @@ class HomeopathicMedicine(BaseModelWithUid):
         choices=HomeopathicMedicineStatus.choices,
         default=HomeopathicMedicineStatus.AVAILABLE,
     )
-
     attachments = GenericRelation(
         Attachment,
         related_query_name="homeopathic_medicine_attachments",
     )
-
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
@@ -153,7 +145,7 @@ class HomeopathicPrescription(BaseModelWithUid):
     appointment = models.ForeignKey(
         HomeopathicAppointment,
         on_delete=models.CASCADE,
-        related_name="appointment_prescriptions",
+        related_name="appointment_prescription",
     )
     medicine = models.ForeignKey(
         HomeopathicMedicine,

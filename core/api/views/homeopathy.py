@@ -91,7 +91,7 @@ class HomeopathicAppointmentListCreateView(ListCreateAPIView):
                 "homeopathic_patient__user",
             )
             .prefetch_related(
-                "appointment_prescriptions__medicine",
+                "appointment_prescription__medicine",
                 "attachments",
             )
             .order_by("-created_at")
@@ -121,7 +121,7 @@ class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
                 "homeopathic_patient__user",
             )
             .prefetch_related(
-                "appointment_prescriptions__medicine",
+                "appointment_prescription__medicine",
                 "attachments",
             )
         )

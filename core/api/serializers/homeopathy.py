@@ -173,7 +173,7 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
 
 
 class HomeopathicPrescriptionSerializer(serializers.ModelSerializer):
-    medicine = serializers.UUIDField()
+    medicine = serializers.UUIDField(write_only=True)
     medicine_details = MedicineSlimSerializer(
         source="medicine",
         read_only=True,
@@ -215,7 +215,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         write_only=True,
         required=True,
     )
-    prescription = HomeopathicPrescriptionSerializer(
+    appointment_prescription = HomeopathicPrescriptionSerializer(
         many=True,
         required=False,
     )
@@ -249,7 +249,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             "treatment_effectiveness",
             "status",
             "patient",
-            "prescription",
+            "appointment_prescription",
             "remove_medicine_uids",
             "files",
             "upload_files",
@@ -302,7 +302,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         prescription_data = validated_data.pop(
-            "prescription",
+            "appointment_prescription",
             [],
         )
         # Not applicable during create
@@ -355,7 +355,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         prescription_data = validated_data.pop(
-            "prescription",
+            "appointment_prescription",
             None,
         )
         remove_medicine_uids = validated_data.pop(
@@ -434,7 +434,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         representation["patient"] = HomeopathicPatientSlimSerializer(
-            instance.homeopathic_patient
+            instance.homeopathic_patient, context=self.context
         ).data
 
         return representation
