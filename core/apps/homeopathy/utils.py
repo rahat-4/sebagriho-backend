@@ -1,6 +1,9 @@
 from django.db import transaction
+from django.db.models import Max
 
 from apps.organizations.models import Organization
+
+MIN_PATIENT_SERIAL = 100000
 
 
 def get_homeopathic_patient_slug(instance) -> str:
@@ -23,10 +26,16 @@ def get_patient_file_path(instance, filename):
     return f"patients/{instance.organization.uid}/{filename}"
 
 
-def get_next_patient_serial(organization):
-    with transaction.atomic():
-        organization = Organization.objects.select_for_update().get(pk=organization.pk)
-        organization.homeopathic_patient_serial += 1
-        organization.save(update_fields=["homeopathic_patient_serial"])
+def get_patient_serial_number(organization):
+    from apps.homeopathy.models import HomeopathicPatient
 
-        return organization.homeopathic_patient_serial
+    organization = Organization.objects.select_for_update().get(pk=organization.pk)
+
+    last_serial = HomeopathicPatient.objects.filter(
+        organization=organization
+    ).aggregate(max_serial=Max("serial_number"))["max_serial"]
+
+    if last_serial is None:
+        return MIN_PATIENT_SERIAL
+
+    return max(last_serial + 1, MIN_PATIENT_SERIAL)

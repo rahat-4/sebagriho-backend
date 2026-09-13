@@ -9,7 +9,7 @@ from apps.homeopathy.models import (
     HomeopathicMedicine,
     HomeopathicPrescription,
 )
-from apps.homeopathy.utils import get_next_patient_serial
+from apps.homeopathy.utils import get_patient_serial_number
 
 
 from common.serializers import (
@@ -120,7 +120,7 @@ class HomeopathicPatientSerializer(serializers.ModelSerializer):
         organization = request.organization
 
         # Generate organization-scoped patient serial number
-        serial_number = get_next_patient_serial(organization)
+        serial_number = get_patient_serial_number(organization)
 
         user = User.objects.create_user(
             **user_data,
