@@ -213,6 +213,8 @@ class HomeopathicPrescriptionSerializer(serializers.ModelSerializer):
     def validate_medicine(self, value):
         organization = self.context["request"].organization
 
+        print("ooooooooooooooo", value)
+
         try:
             return HomeopathicMedicine.objects.get(
                 uid=value,
@@ -233,7 +235,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         many=True,
         required=False,
     )
-    remove_medicine_uids = serializers.ListField(
+    remove_prescription_uids = serializers.ListField(
         child=serializers.UUIDField(),
         write_only=True,
         required=False,
@@ -264,7 +266,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             "status",
             "patient",
             "appointment_prescription",
-            "remove_medicine_uids",
+            "remove_prescription_uids",
             "files",
             "upload_files",
             "remove_files",
@@ -304,13 +306,13 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         # --------------------------------
         # Remove medicine UUIDs
         # --------------------------------
-        remove_medicine_uids = attrs.get(
-            "remove_medicine_uids",
+        remove_prescription_uids = attrs.get(
+            "remove_prescription_uids",
             [],
         )
 
-        if remove_medicine_uids:
-            attrs["remove_medicine_uids"] = list(set(remove_medicine_uids))
+        if remove_prescription_uids:
+            attrs["remove_prescription_uids"] = list(set(remove_prescription_uids))
 
         return attrs
 
@@ -321,7 +323,7 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         )
         # Not applicable during create
         validated_data.pop(
-            "remove_medicine_uids",
+            "remove_prescription_uids",
             [],
         )
         upload_files = validated_data.pop(
@@ -372,8 +374,8 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             "appointment_prescription",
             None,
         )
-        remove_medicine_uids = validated_data.pop(
-            "remove_medicine_uids",
+        remove_prescription_uids = validated_data.pop(
+            "remove_prescription_uids",
             [],
         )
         upload_files = validated_data.pop(
@@ -384,7 +386,6 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
             "remove_files",
             [],
         )
-
         # --------------------------------
         # Update appointment fields
         # --------------------------------
@@ -396,30 +397,42 @@ class HomeopathicAppointmentSerializer(serializers.ModelSerializer):
         # --------------------------------
         # Remove one/multiple medicines
         # --------------------------------
-        if remove_medicine_uids:
+        if remove_prescription_uids:
             HomeopathicPrescription.objects.filter(
                 appointment=instance,
-                medicine__uid__in=remove_medicine_uids,
+                uid__in=remove_prescription_uids,
             ).delete()
 
         # --------------------------------
         # Create / update prescription
         # --------------------------------
         if prescription_data is not None:
-            for prescription_data in prescription_data:
-                medicine = prescription_data["medicine"]
+            for data in prescription_data:
+                medicine = data.get("medicine")
 
-                HomeopathicPrescription.objects.update_or_create(
-                    appointment=instance,
-                    medicine=medicine,
-                    defaults={
-                        "dosage": prescription_data.get("dosage"),
-                        "frequency": prescription_data.get("frequency"),
-                        "duration": prescription_data.get("duration"),
-                        "meal_timing": prescription_data.get("meal_timing"),
-                        "instructions": prescription_data.get("instructions"),
-                    },
-                )
+                defaults = {
+                    "dosage": data.get("dosage"),
+                    "frequency": data.get("frequency"),
+                    "duration": data.get("duration"),
+                    "meal_timing": data.get("meal_timing"),
+                    "instructions": data.get("instructions"),
+                }
+
+                if medicine:
+                    # Medicine is provided:
+                    # Find/create prescription using appointment + medicine
+                    HomeopathicPrescription.objects.update_or_create(
+                        appointment=instance,
+                        medicine=medicine,
+                        defaults=defaults,
+                    )
+
+                else:
+                    # Medicine is not provided:
+                    # Update existing prescription for this appointment
+                    HomeopathicPrescription.objects.filter(
+                        appointment=instance,
+                    ).update(**defaults)
 
         # --------------------------------
         # Upload files

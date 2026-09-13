@@ -329,13 +329,24 @@ class HomeopathicMedicineListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         organization = getattr(self.request, "organization", None)
-        return (
+
+        queryset = (
             HomeopathicMedicine.objects.filter(
                 organization=organization,
             )
             .prefetch_related("attachments")
             .order_by("-created_at")
         )
+
+        appointment_uid = self.request.query_params.get("appointment_uid")
+
+        if appointment_uid:
+            queryset = queryset.exclude(
+                medicine_prescriptions__appointment__uid=appointment_uid,
+                medicine_prescriptions__appointment__organization=organization,
+            )
+
+        return queryset
 
 
 class HomeopathicMedicineDetailView(RetrieveUpdateDestroyAPIView):

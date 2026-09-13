@@ -172,7 +172,8 @@ class HomeopathicPrescription(BaseModelWithUid):
     meal_timing = models.CharField(
         max_length=20,
         choices=HomeopathicPrescriptionMealTiming.choices,
-        default=HomeopathicPrescriptionMealTiming.ANY_TIME,
+        blank=True,
+        null=True,
     )
     instructions = models.TextField(
         blank=True,
