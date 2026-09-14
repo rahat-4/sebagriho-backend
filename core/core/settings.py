@@ -44,11 +44,11 @@ PROJECT_APPS = [
     "common",
     "apps.authentication",
     "apps.organizations",
-    "apps.doctors",
-    "apps.patients",
-    "apps.prescriptions",
-    "apps.appointments",
-    "apps.medicines",
+    # "apps.doctors",
+    # "apps.patients",
+    # "apps.prescriptions",
+    # "apps.appointments",
+    # "apps.medicines",
     "apps.homeopathy",
 ]
 
