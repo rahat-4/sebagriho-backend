@@ -20,26 +20,26 @@ class Command(BaseCommand):
             "makemigrations",
             "organizations",
         )
-        call_command(
-            "makemigrations",
-            "patients",
-        )
-        call_command(
-            "makemigrations",
-            "doctors",
-        )
-        call_command(
-            "makemigrations",
-            "appointments",
-        )
-        call_command(
-            "makemigrations",
-            "prescriptions",
-        )
-        call_command(
-            "makemigrations",
-            "medicines",
-        )
+        # call_command(
+        #     "makemigrations",
+        #     "patients",
+        # )
+        # call_command(
+        #     "makemigrations",
+        #     "doctors",
+        # )
+        # call_command(
+        #     "makemigrations",
+        #     "appointments",
+        # )
+        # call_command(
+        #     "makemigrations",
+        #     "prescriptions",
+        # )
+        # call_command(
+        #     "makemigrations",
+        #     "medicines",
+        # )
         call_command(
             "makemigrations",
             "homeopathy",
