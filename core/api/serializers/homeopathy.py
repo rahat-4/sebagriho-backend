@@ -52,6 +52,7 @@ class PatientUserSerializer(serializers.ModelSerializer):
             "email",
             "gender",
             "date_of_birth",
+            "blood_group",
         ]
         read_only_fields = [
             "uid",
