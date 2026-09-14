@@ -55,10 +55,6 @@ class HomeopathicDashboardView(APIView):
 
         medicines = HomeopathicMedicine.objects.filter(organization=organization)
 
-        prescriptions = HomeopathicPrescription.objects.filter(
-            appointment__organization=organization
-        )
-
         # ---------------------------------------------------------
         # Summary
         # ---------------------------------------------------------
@@ -69,7 +65,6 @@ class HomeopathicDashboardView(APIView):
         today_appointments = appointments.filter(created_at__date=today).count()
         total_medicines = medicines.count()
         available_medicines = medicines.filter(status="AVAILABLE").count()
-        total_prescriptions = prescriptions.count()
 
         # ---------------------------------------------------------
         # Patient growth
@@ -110,22 +105,6 @@ class HomeopathicDashboardView(APIView):
         ]
 
         # ---------------------------------------------------------
-        # Appointment status
-        # ---------------------------------------------------------
-
-        appointment_status = (
-            appointments.values("status").annotate(count=Count("id")).order_by("-count")
-        )
-
-        appointment_status = [
-            {
-                "status": item["status"],
-                "count": item["count"],
-            }
-            for item in appointment_status
-        ]
-
-        # ---------------------------------------------------------
         # Patient status
         # ---------------------------------------------------------
 
@@ -161,23 +140,23 @@ class HomeopathicDashboardView(APIView):
         # Top prescribed medicines
         # ---------------------------------------------------------
 
-        top_medicines = (
-            prescriptions.values(
-                "medicine__uid",
-                "medicine__name",
-            )
-            .annotate(prescription_count=Count("id"))
-            .order_by("-prescription_count")[:10]
-        )
+        # top_medicines = (
+        #     prescriptions.values(
+        #         "medicine__uid",
+        #         "medicine__name",
+        #     )
+        #     .annotate(prescription_count=Count("id"))
+        #     .order_by("-prescription_count")[:10]
+        # )
 
-        top_medicines = [
-            {
-                "medicine_uid": item["medicine__uid"],
-                "name": item["medicine__name"],
-                "prescription_count": item["prescription_count"],
-            }
-            for item in top_medicines
-        ]
+        # top_medicines = [
+        #     {
+        #         "medicine_uid": item["medicine__uid"],
+        #         "name": item["medicine__name"],
+        #         "prescription_count": item["prescription_count"],
+        #     }
+        #     for item in top_medicines
+        # ]
 
         # ---------------------------------------------------------
         # Response
@@ -191,14 +170,12 @@ class HomeopathicDashboardView(APIView):
                 "today_appointments": today_appointments,
                 "total_medicines": total_medicines,
                 "available_medicines": available_medicines,
-                "total_prescriptions": total_prescriptions,
             },
             "patient_growth": patient_growth,
             "appointment_growth": appointment_growth,
-            "appointment_status": appointment_status,
             "patient_status": patient_status,
             "medicine_status": medicine_status,
-            "top_medicines": top_medicines,
+            # "top_medicines": top_medicines,
         }
 
         serializer = HomeopathicDashboardSerializer(data)

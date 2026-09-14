@@ -30,10 +30,8 @@ class HomeopathicDashboardSerializer(serializers.Serializer):
     summary = serializers.DictField()
     patient_growth = serializers.ListField()
     appointment_growth = serializers.ListField()
-    appointment_status = serializers.ListField()
     patient_status = serializers.ListField()
     medicine_status = serializers.ListField()
-    top_medicines = serializers.ListField()
 
 
 class PatientUserSerializer(serializers.ModelSerializer):
