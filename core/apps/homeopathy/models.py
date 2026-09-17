@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 
@@ -74,6 +75,8 @@ class HomeopathicAppointment(BaseModelWithUid):
         unique=True,
         populate_from=get_homeopathic_appointment_slug,
     )
+    serial_number = models.PositiveIntegerField(editable=False)
+    appointment_date = models.DateField(default=timezone.now)
     symptoms = models.TextField(blank=True, null=True)
     treatment_effectiveness = models.TextField(
         blank=True,
@@ -82,7 +85,7 @@ class HomeopathicAppointment(BaseModelWithUid):
     status = models.CharField(
         max_length=20,
         choices=HomeopathicAppointmentStatus.choices,
-        default=HomeopathicAppointmentStatus.ACTIVE,
+        default=HomeopathicAppointmentStatus.SCHEDULED,
     )
     attachments = GenericRelation(
         Attachment,
@@ -99,10 +102,17 @@ class HomeopathicAppointment(BaseModelWithUid):
         related_name="homeopathic_appointments",
     )
 
+    class Meta:
+        ordering = ["appointment_date", "serial_number"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "appointment_date", "serial_number"],
+                name="unique_appointment_serial_per_org_per_day",
+            ),
+        ]
+
     def __str__(self):
-        return (
-            f"{self.organization.name} - " f"{self.homeopathic_patient.serial_number}"
-        )
+        return f"{self.organization.name} - Serial #{self.serial_number} ({self.appointment_date})"
 
 
 class HomeopathicMedicine(BaseModelWithUid):

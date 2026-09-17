@@ -229,7 +229,7 @@ class HomeopathicAppointmentListCreateView(ListCreateAPIView):
     permission_classes = [IsOrganizationOwner]
     serializer_class = HomeopathicAppointmentSerializer
 
-    filterset_fields = ["homeopathic_patient__miasm_type"]
+    filterset_fields = {"status": ["exact"], "appointment_date": ["gte", "lte"]}
 
     search_fields = [
         "symptoms",

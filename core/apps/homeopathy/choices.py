@@ -24,8 +24,10 @@ class MiasmType(models.TextChoices):
 
 
 class HomeopathicAppointmentStatus(models.TextChoices):
-    ACTIVE = "ACTIVE", "Active"
-    DELETED = "DELETED", "Deleted"
+    SCHEDULED = "SCHEDULED", "Scheduled"
+    COMPLETED = "COMPLETED", "Completed"
+    CANCELLED = "CANCELLED", "Cancelled"
+    ABSENT = "ABSENT", "Absent"
 
 
 class HomeopathicMedicineStatus(models.TextChoices):
