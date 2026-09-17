@@ -12,6 +12,7 @@ from apps.homeopathy.models import (
     HomeopathicAppointment,
     HomeopathicPrescription,
 )
+from apps.homeopathy.choices import HomeopathicAppointmentStatus
 
 from common.permissions import IsOrganizationOwner
 
@@ -229,7 +230,10 @@ class HomeopathicAppointmentListCreateView(ListCreateAPIView):
     permission_classes = [IsOrganizationOwner]
     serializer_class = HomeopathicAppointmentSerializer
 
-    filterset_fields = {"status": ["exact"], "appointment_date": ["gte", "lte"]}
+    filterset_fields = {
+        "status": ["exact"],
+        "appointment_date": ["gte", "lte"],
+    }
 
     search_fields = [
         "symptoms",
@@ -244,13 +248,9 @@ class HomeopathicAppointmentListCreateView(ListCreateAPIView):
     ]
 
     def get_queryset(self):
-        organization = getattr(
-            self.request,
-            "organization",
-            None,
-        )
+        organization = getattr(self.request, "organization", None)
 
-        return (
+        queryset = (
             HomeopathicAppointment.objects.filter(
                 organization=organization,
             )
@@ -262,8 +262,24 @@ class HomeopathicAppointmentListCreateView(ListCreateAPIView):
                 "appointment_prescription__medicine",
                 "attachments",
             )
-            .order_by("-created_at")
         )
+
+        # When requesting today's scheduled appointments,
+        # order by patient serial number.
+        status = self.request.query_params.get("status")
+        appointment_date = self.request.query_params.get("appointment_date")
+
+        today = timezone.localdate()
+
+        if (
+            status == HomeopathicAppointmentStatus.SCHEDULED
+            and appointment_date == str(today)
+        ):
+            return queryset.order_by(
+                "homeopathic_patient__serial_number",
+            )
+
+        return queryset.order_by("-created_at")
 
 
 class HomeopathicAppointmentDetailView(RetrieveUpdateDestroyAPIView):
