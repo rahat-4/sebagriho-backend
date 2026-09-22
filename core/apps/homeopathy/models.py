@@ -203,3 +203,168 @@ class HomeopathicPrescription(BaseModelWithUid):
 
     def __str__(self):
         return f"{self.medicine.name} - {self.appointment}"
+
+
+class Repertory(BaseModelWithUid):
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    source = models.CharField(max_length=255, blank=True)
+    version = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+class RepertoryChapter(BaseModelWithUid):
+    repertory = models.ForeignKey(
+        Repertory,
+        on_delete=models.CASCADE,
+        related_name="chapters",
+    )
+    source_id = models.IntegerField()
+    name = models.CharField(max_length=255)
+    slug = models.SlugField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["repertory", "source_id"],
+                name="unique_repertory_chapter_source",
+            )
+        ]
+
+
+class RepertoryRubric(BaseModelWithUid):
+    repertory = models.ForeignKey(
+        Repertory,
+        on_delete=models.CASCADE,
+        related_name="rubrics",
+    )
+    source_id = models.IntegerField()
+    chapter = models.ForeignKey(
+        RepertoryChapter,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="rubrics",
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="children",
+    )
+    text = models.CharField(max_length=500)
+    full_path = models.TextField()
+    source_abbreviation = models.CharField(
+        max_length=270,
+        default="publicum",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["repertory", "source_id"],
+                name="unique_repertory_rubric_source",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["repertory", "source_id"]),
+            models.Index(fields=["parent"]),
+        ]
+
+
+class RubricTranslation(BaseModelWithUid):
+    rubric = models.ForeignKey(
+        RepertoryRubric,
+        on_delete=models.CASCADE,
+        related_name="translations",
+    )
+    language = models.CharField(
+        max_length=10,
+        default="bn",
+    )
+    text = models.TextField()
+    full_path = models.TextField()
+    is_verified = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["rubric", "language"],
+                name="unique_rubric_translation_language",
+            )
+        ]
+
+
+class RepertoryRemedy(BaseModelWithUid):
+    repertory = models.ForeignKey(
+        Repertory,
+        on_delete=models.CASCADE,
+        related_name="remedies",
+    )
+    source_id = models.IntegerField()
+    abbreviation = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
+    alternative_name = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["repertory", "source_id"],
+                name="unique_repertory_remedy_source",
+            )
+        ]
+
+
+class RemedyRubric(BaseModelWithUid):
+    rubric = models.ForeignKey(
+        RepertoryRubric,
+        on_delete=models.CASCADE,
+        related_name="remedy_relations",
+    )
+    remedy = models.ForeignKey(
+        RepertoryRemedy,
+        on_delete=models.CASCADE,
+        related_name="rubric_relations",
+    )
+    grade = models.PositiveSmallIntegerField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["rubric", "remedy"],
+                name="unique_remedy_rubric",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["rubric"]),
+            models.Index(fields=["remedy"]),
+            models.Index(fields=["rubric", "grade"]),
+        ]
+
+
+class AppointmentRubric(BaseModelWithUid):
+    appointment = models.ForeignKey(
+        HomeopathicAppointment,
+        on_delete=models.CASCADE,
+        related_name="selected_rubrics",
+    )
+    rubric = models.ForeignKey(
+        RepertoryRubric,
+        on_delete=models.PROTECT,
+        related_name="appointment_selections",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["appointment", "rubric"],
+                name="unique_rubric_per_appointment",
+            )
+        ]

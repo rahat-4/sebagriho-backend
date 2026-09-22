@@ -1,8 +1,14 @@
 from django.contrib import admin
 
-from .models import HomeopathicPatient, HomeopathicAppointment, HomeopathicMedicine
+from .models import (
+    HomeopathicPatient,
+    HomeopathicAppointment,
+    HomeopathicMedicine,
+    Repertory,
+)
 
 admin.site.register(HomeopathicPatient)
+admin.site.register(Repertory)
 
 
 @admin.register(HomeopathicAppointment)
