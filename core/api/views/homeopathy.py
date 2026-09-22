@@ -1,8 +1,15 @@
-from django.db.models import Count
+from collections import defaultdict
+
+from django.db.models import Count, F, Q, Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework import status
+from rest_framework.generics import (
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -21,7 +28,197 @@ from ..serializers.homeopathy import (
     HomeopathicPatientSerializer,
     HomeopathicAppointmentSerializer,
     HomeopathicMedicineSerializer,
+    RepertorySerializer,
+    RepertoryChapterSerializer,
+    RepertoryRubricSerializer,
+    RepertoryRemedySerializer,
+    RepertoryRemedyAnalysisSerializer,
 )
+from apps.homeopathy.models import (
+    Repertory,
+    RepertoryChapter,
+    RepertoryRubric,
+    RepertoryRemedy,
+    RemedyRubric,
+)
+
+
+class RepertoryListView(ListAPIView):
+    serializer_class = RepertorySerializer
+
+    def get_queryset(self):
+        return Repertory.objects.filter(is_active=True).order_by("name")
+
+
+class RepertoryChapterListView(ListAPIView):
+    serializer_class = RepertoryChapterSerializer
+
+    def get_queryset(self):
+        return RepertoryChapter.objects.filter(
+            repertory__uid=self.kwargs["repertory_uid"],
+            repertory__is_active=True,
+        ).order_by("source_id")
+
+
+class RepertoryRubricListView(ListAPIView):
+    serializer_class = RepertoryRubricSerializer
+
+    def get_queryset(self):
+        queryset = RepertoryRubric.objects.filter(
+            repertory__uid=self.kwargs["repertory_uid"],
+            repertory__is_active=True,
+        ).select_related("chapter", "parent")
+
+        chapter_uid = self.request.query_params.get("chapter_uid")
+        parent_uid = self.request.query_params.get("parent_uid")
+
+        if chapter_uid:
+            queryset = queryset.filter(chapter__uid=chapter_uid)
+        if parent_uid:
+            queryset = queryset.filter(parent__uid=parent_uid)
+
+        return queryset.order_by("source_id")
+
+
+class RepertoryRubricSearchView(ListAPIView):
+    serializer_class = RepertoryRubricSerializer
+    search_fields = [
+        "text",
+        "full_path",
+        "source_abbreviation",
+    ]
+
+    def get_queryset(self):
+        return (
+            RepertoryRubric.objects.filter(
+                repertory__uid=self.kwargs["repertory_uid"],
+                repertory__is_active=True,
+            )
+            .select_related("chapter", "parent")
+            .order_by("source_id")
+        )
+
+
+class RepertoryRubricRemedyListView(ListAPIView):
+    serializer_class = RepertoryRemedySerializer
+
+    def get_queryset(self):
+        return (
+            RepertoryRemedy.objects.filter(
+                repertory__uid=self.kwargs["repertory_uid"],
+                repertory__is_active=True,
+                rubric_relations__rubric__uid=self.kwargs["rubric_uid"],
+            )
+            .annotate(
+                relation_grade=F("rubric_relations__grade"),
+            )
+            .order_by("-relation_grade", "name")
+        )
+
+
+class RepertoryAnalysisView(APIView):
+
+    def post(self, request, repertory_uid):
+        rubric_uids = request.data.get("rubric_uids", [])
+
+        if not rubric_uids:
+            return Response(
+                {"detail": "At least one rubric is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        rubric_uids = list(set(rubric_uids))
+
+        selected_rubrics = list(
+            RepertoryRubric.objects.filter(
+                uid__in=rubric_uids,
+                repertory__uid=repertory_uid,
+                repertory__is_active=True,
+            ).select_related("chapter", "parent")
+        )
+
+        if len(selected_rubrics) != len(rubric_uids):
+            return Response(
+                {"detail": "One or more rubrics are invalid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        rubric_map = {str(rubric.uid): rubric for rubric in selected_rubrics}
+
+        relations = RemedyRubric.objects.filter(
+            rubric__uid__in=rubric_uids,
+            remedy__repertory__uid=repertory_uid,
+            remedy__repertory__is_active=True,
+        ).select_related("rubric", "remedy")
+
+        remedy_data = defaultdict(
+            lambda: {
+                "remedy": None,
+                "matched_rubrics": [],
+                "total_grade": 0,
+            }
+        )
+
+        for relation in relations:
+            remedy_uid = str(relation.remedy.uid)
+
+            data = remedy_data[remedy_uid]
+
+            data["remedy"] = relation.remedy
+            data["total_grade"] += relation.grade
+
+            data["matched_rubrics"].append(
+                {
+                    "rubric_uid": str(relation.rubric.uid),
+                    "rubric": relation.rubric.text,
+                    "full_path": relation.rubric.full_path,
+                    "grade": relation.grade,
+                }
+            )
+
+        remedies = []
+
+        total_selected = len(selected_rubrics)
+
+        for data in remedy_data.values():
+
+            matched_count = len(data["matched_rubrics"])
+
+            match_percentage = round(
+                (matched_count / total_selected) * 100,
+                2,
+            )
+
+            remedy = data["remedy"]
+
+            remedies.append(
+                {
+                    "uid": str(remedy.uid),
+                    "abbreviation": remedy.abbreviation,
+                    "name": remedy.name,
+                    "alternative_name": remedy.alternative_name,
+                    "total_selected": total_selected,
+                    "matched_count": matched_count,
+                    "match_percentage": match_percentage,
+                    "total_grade": data["total_grade"],
+                    "matched_rubrics": data["matched_rubrics"],
+                }
+            )
+
+        remedies.sort(
+            key=lambda item: (
+                -item["matched_count"],
+                -item["total_grade"],
+                item["name"],
+            )
+        )
+
+        return Response(
+            {
+                "total_selected": total_selected,
+                "remedies": remedies,
+            }
+        )
 
 
 class HomeopathicDashboardView(APIView):

@@ -9,6 +9,10 @@ from apps.homeopathy.models import (
     HomeopathicAppointment,
     HomeopathicMedicine,
     HomeopathicPrescription,
+    Repertory,
+    RepertoryChapter,
+    RepertoryRubric,
+    RepertoryRemedy,
 )
 from apps.homeopathy.utils import get_patient_serial_number
 
@@ -33,6 +37,50 @@ class HomeopathicDashboardSerializer(serializers.Serializer):
     appointment_growth = serializers.ListField()
     patient_status = serializers.ListField()
     medicine_status = serializers.ListField()
+
+
+class RepertorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Repertory
+        fields = ["uid", "name", "slug", "source", "version"]
+
+
+class RepertoryChapterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RepertoryChapter
+        fields = ["uid", "source_id", "name", "slug"]
+
+
+class RepertoryRubricSerializer(serializers.ModelSerializer):
+    chapter_uid = serializers.UUIDField(source="chapter.uid", read_only=True)
+    parent_uid = serializers.UUIDField(source="parent.uid", read_only=True)
+
+    class Meta:
+        model = RepertoryRubric
+        fields = [
+            "uid",
+            "source_id",
+            "chapter_uid",
+            "parent_uid",
+            "text",
+            "full_path",
+            "source_abbreviation",
+        ]
+
+
+class RepertoryRemedySerializer(serializers.ModelSerializer):
+    grade = serializers.IntegerField(source="relation_grade", read_only=True)
+
+    class Meta:
+        model = RepertoryRemedy
+        fields = [
+            "uid",
+            "source_id",
+            "abbreviation",
+            "name",
+            "alternative_name",
+            "grade",
+        ]
 
 
 class PatientUserSerializer(serializers.ModelSerializer):
@@ -572,3 +620,19 @@ class HomeopathicMedicineSerializer(serializers.ModelSerializer):
             )
 
         return instance
+
+
+class RepertoryRemedyAnalysisSerializer(serializers.ModelSerializer):
+    matched_rubrics = serializers.IntegerField(read_only=True)
+    score = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = RepertoryRemedy
+        fields = [
+            "uid",
+            "abbreviation",
+            "name",
+            "alternative_name",
+            "matched_rubrics",
+            "score",
+        ]

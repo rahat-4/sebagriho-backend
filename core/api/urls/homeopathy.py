@@ -8,9 +8,41 @@ from ..views.homeopathy import (
     HomeopathicAppointmentDetailView,
     HomeopathicMedicineListCreateView,
     HomeopathicMedicineDetailView,
+    RepertoryListView,
+    RepertoryChapterListView,
+    RepertoryRubricListView,
+    RepertoryRubricSearchView,
+    RepertoryRubricRemedyListView,
+    RepertoryAnalysisView,
 )
 
 urlpatterns = [
+    # Repertories
+    path(
+        "/repertories",
+        RepertoryListView.as_view(),
+        name="repertory-list",
+    ),
+    path(
+        "/repertories/<uuid:repertory_uid>/chapters",
+        RepertoryChapterListView.as_view(),
+        name="repertory-chapter-list",
+    ),
+    path(
+        "/repertories/<uuid:repertory_uid>/rubrics/search",
+        RepertoryRubricSearchView.as_view(),
+        name="repertory-rubric-search",
+    ),
+    path(
+        "/repertories/<uuid:repertory_uid>/rubrics",
+        RepertoryRubricListView.as_view(),
+        name="repertory-rubric-list",
+    ),
+    path(
+        "/repertories/<uuid:repertory_uid>/analysis",
+        RepertoryAnalysisView.as_view(),
+        name="repertory-analysis",
+    ),
     path(
         "/dashboard", HomeopathicDashboardView.as_view(), name="homeopathic-dashboard"
     ),
