@@ -11,8 +11,6 @@ from ..views.homeopathy import (
     RepertoryListView,
     RepertoryChapterListView,
     RepertoryRubricListView,
-    RepertoryRubricSearchView,
-    RepertoryRubricRemedyListView,
     RepertoryAnalysisView,
 )
 
@@ -27,11 +25,6 @@ urlpatterns = [
         "/repertories/<uuid:repertory_uid>/chapters",
         RepertoryChapterListView.as_view(),
         name="repertory-chapter-list",
-    ),
-    path(
-        "/repertories/<uuid:repertory_uid>/rubrics/search",
-        RepertoryRubricSearchView.as_view(),
-        name="repertory-rubric-search",
     ),
     path(
         "/repertories/<uuid:repertory_uid>/rubrics",

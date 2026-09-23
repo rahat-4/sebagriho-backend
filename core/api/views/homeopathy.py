@@ -62,6 +62,11 @@ class RepertoryChapterListView(ListAPIView):
 
 class RepertoryRubricListView(ListAPIView):
     serializer_class = RepertoryRubricSerializer
+    search_fields = [
+        "text",
+        "full_path",
+        "source_abbreviation",
+    ]
 
     def get_queryset(self):
         queryset = RepertoryRubric.objects.filter(
@@ -78,42 +83,6 @@ class RepertoryRubricListView(ListAPIView):
             queryset = queryset.filter(parent__uid=parent_uid)
 
         return queryset.order_by("source_id")
-
-
-class RepertoryRubricSearchView(ListAPIView):
-    serializer_class = RepertoryRubricSerializer
-    search_fields = [
-        "text",
-        "full_path",
-        "source_abbreviation",
-    ]
-
-    def get_queryset(self):
-        return (
-            RepertoryRubric.objects.filter(
-                repertory__uid=self.kwargs["repertory_uid"],
-                repertory__is_active=True,
-            )
-            .select_related("chapter", "parent")
-            .order_by("source_id")
-        )
-
-
-class RepertoryRubricRemedyListView(ListAPIView):
-    serializer_class = RepertoryRemedySerializer
-
-    def get_queryset(self):
-        return (
-            RepertoryRemedy.objects.filter(
-                repertory__uid=self.kwargs["repertory_uid"],
-                repertory__is_active=True,
-                rubric_relations__rubric__uid=self.kwargs["rubric_uid"],
-            )
-            .annotate(
-                relation_grade=F("rubric_relations__grade"),
-            )
-            .order_by("-relation_grade", "name")
-        )
 
 
 class RepertoryAnalysisView(APIView):
