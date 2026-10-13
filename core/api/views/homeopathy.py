@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Count, F, Prefetch, Q, Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
@@ -40,6 +40,8 @@ from apps.homeopathy.models import (
     RepertoryRubric,
     RepertoryRemedy,
     RemedyRubric,
+    ChapterTranslation,
+    RubricTranslation,
 )
 
 
@@ -54,25 +56,69 @@ class RepertoryChapterListView(ListAPIView):
     serializer_class = RepertoryChapterSerializer
 
     def get_queryset(self):
-        return RepertoryChapter.objects.filter(
+        language = self.request.query_params.get("language")
+
+        queryset = RepertoryChapter.objects.filter(
             repertory__uid=self.kwargs["repertory_uid"],
             repertory__is_active=True,
-        ).order_by("source_id")
+        )
+
+        translations_queryset = (
+            ChapterTranslation.objects.filter(language=language)
+            if language
+            else ChapterTranslation.objects.none()
+        )
+
+        queryset = queryset.prefetch_related(
+            Prefetch(
+                "translations",
+                queryset=translations_queryset,
+                to_attr="_lang_translations",
+            )
+        )
+
+        if language and language != "en":
+            queryset = queryset.filter(translations__language=language).distinct()
+
+        return queryset.order_by("source_id")
+
+    @property
+    def search_fields(self):
+        language = self.request.query_params.get("language")
+
+        if language and language != "en":
+            return ["translations__name"]
+
+        return ["name"]
 
 
 class RepertoryRubricListView(ListAPIView):
     serializer_class = RepertoryRubricSerializer
-    search_fields = [
-        "text",
-        "full_path",
-        "source_abbreviation",
-    ]
 
     def get_queryset(self):
+        language = self.request.query_params.get("language")
+
         queryset = RepertoryRubric.objects.filter(
             repertory__uid=self.kwargs["repertory_uid"],
             repertory__is_active=True,
         ).select_related("chapter", "parent")
+
+        translations_queryset = (
+            RubricTranslation.objects.filter(language=language)
+            if language
+            else RubricTranslation.objects.none()
+        )
+
+        queryset = queryset.prefetch_related(
+            Prefetch(
+                "translations",
+                queryset=translations_queryset,
+                to_attr="_lang_translations",
+            )
+        )
+
+        if language and language != "en":
+            queryset = queryset.filter(translations__language=language).distinct()
 
         chapter_uid = self.request.query_params.get("chapter_uid")
         parent_uid = self.request.query_params.get("parent_uid")
@@ -83,6 +129,15 @@ class RepertoryRubricListView(ListAPIView):
             queryset = queryset.filter(parent__uid=parent_uid)
 
         return queryset.order_by("source_id")
+
+    @property
+    def search_fields(self):
+        language = self.request.query_params.get("language")
+
+        if language and language != "en":
+            return ["translations__text", "translations__full_path"]
+
+        return ["text", "full_path", "source_abbreviation"]
 
 
 class RepertoryAnalysisView(APIView):
@@ -114,6 +169,19 @@ class RepertoryAnalysisView(APIView):
 
         rubric_map = {str(rubric.uid): rubric for rubric in selected_rubrics}
 
+        language = request.query_params.get("language") or request.data.get("language")
+
+        translation_by_rubric_id = {}
+
+        if language and language != "en":
+            translation_by_rubric_id = {
+                translation.rubric_id: translation
+                for translation in RubricTranslation.objects.filter(
+                    rubric__uid__in=rubric_uids,
+                    language=language,
+                )
+            }
+
         relations = RemedyRubric.objects.filter(
             rubric__uid__in=rubric_uids,
             remedy__repertory__uid=repertory_uid,
@@ -136,11 +204,17 @@ class RepertoryAnalysisView(APIView):
             data["remedy"] = relation.remedy
             data["total_grade"] += relation.grade
 
+            translation = translation_by_rubric_id.get(relation.rubric_id)
+
             data["matched_rubrics"].append(
                 {
                     "rubric_uid": str(relation.rubric.uid),
                     "rubric": relation.rubric.text,
                     "full_path": relation.rubric.full_path,
+                    "translated_rubric": translation.text if translation else None,
+                    "translated_full_path": (
+                        translation.full_path if translation else None
+                    ),
                     "grade": relation.grade,
                 }
             )

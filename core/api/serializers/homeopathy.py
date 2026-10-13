@@ -46,14 +46,22 @@ class RepertorySerializer(serializers.ModelSerializer):
 
 
 class RepertoryChapterSerializer(serializers.ModelSerializer):
+    translated_name = serializers.SerializerMethodField()
+
     class Meta:
         model = RepertoryChapter
-        fields = ["uid", "source_id", "name", "slug"]
+        fields = ["uid", "source_id", "name", "translated_name", "slug"]
+
+    def get_translated_name(self, obj):
+        translations = getattr(obj, "_lang_translations", None)
+        return translations[0].name if translations else None
 
 
 class RepertoryRubricSerializer(serializers.ModelSerializer):
     chapter_uid = serializers.UUIDField(source="chapter.uid", read_only=True)
     parent_uid = serializers.UUIDField(source="parent.uid", read_only=True)
+    translated_text = serializers.SerializerMethodField()
+    translated_full_path = serializers.SerializerMethodField()
 
     class Meta:
         model = RepertoryRubric
@@ -65,7 +73,22 @@ class RepertoryRubricSerializer(serializers.ModelSerializer):
             "text",
             "full_path",
             "source_abbreviation",
+            "translated_text",
+            "translated_full_path",
         ]
+
+    def get_translated_text(self, obj):
+        translation = self._get_translation(obj)
+        return translation.text if translation else None
+
+    def get_translated_full_path(self, obj):
+        translation = self._get_translation(obj)
+        return translation.full_path if translation else None
+
+    @staticmethod
+    def _get_translation(obj):
+        translations = getattr(obj, "_lang_translations", None)
+        return translations[0] if translations else None
 
 
 class RepertoryRemedySerializer(serializers.ModelSerializer):

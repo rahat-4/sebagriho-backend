@@ -5,10 +5,26 @@ from .models import (
     HomeopathicAppointment,
     HomeopathicMedicine,
     Repertory,
+    ChapterTranslation,
+    RubricTranslation,
 )
 
 admin.site.register(HomeopathicPatient)
 admin.site.register(Repertory)
+
+
+@admin.register(ChapterTranslation)
+class ChapterTranslationAdmin(admin.ModelAdmin):
+    list_display = ("chapter", "language", "name")
+    list_filter = ("language",)
+    search_fields = ("name", "chapter__name")
+
+
+@admin.register(RubricTranslation)
+class RubricTranslationAdmin(admin.ModelAdmin):
+    list_display = ("rubric", "language", "text", "is_verified")
+    list_filter = ("language", "is_verified")
+    search_fields = ("text", "full_path", "rubric__text")
 
 
 @admin.register(HomeopathicAppointment)

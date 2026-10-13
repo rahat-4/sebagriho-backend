@@ -235,6 +235,27 @@ class RepertoryChapter(BaseModelWithUid):
         ]
 
 
+class ChapterTranslation(BaseModelWithUid):
+    chapter = models.ForeignKey(
+        RepertoryChapter,
+        on_delete=models.CASCADE,
+        related_name="translations",
+    )
+    language = models.CharField(
+        max_length=10,
+        default="bn",
+    )
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["chapter", "language"],
+                name="unique_chapter_translation_language",
+            )
+        ]
+
+
 class RepertoryRubric(BaseModelWithUid):
     repertory = models.ForeignKey(
         Repertory,
