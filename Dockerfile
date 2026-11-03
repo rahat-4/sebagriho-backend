@@ -26,8 +26,8 @@ COPY . .
 # Collect static files (production only)
 RUN python core/manage.py collectstatic --noinput
 
-# Expose port 8000
-EXPOSE 8000
+# Expose port 8003
+EXPOSE 8003
 
 # Default command (production)
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8003", "--workers", "3"]

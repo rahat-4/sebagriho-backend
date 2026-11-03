@@ -250,9 +250,9 @@ SECURE_REDIRECT_EXEMPT = [r"^api/"]
 
 
 # Twilio Configuration
-TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN")
-TWILIO_SMS_FROM = config("TWILIO_SMS_FROM")
+# TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID")
+# TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN")
+# TWILIO_SMS_FROM = config("TWILIO_SMS_FROM")
 
 # Anthropic Configuration (used to batch-translate repertory data)
-ANTHROPIC_API_KEY = config("ANTHROPIC_API_KEY", default="")
+# ANTHROPIC_API_KEY = config("ANTHROPIC_API_KEY", default="")
